@@ -35,3 +35,8 @@ dist/
 
 # Docs (generated)
 *.pdf
+
+
+# Added by cargo
+
+/target

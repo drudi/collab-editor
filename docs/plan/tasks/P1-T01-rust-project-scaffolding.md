@@ -1,6 +1,6 @@
 # P1-T01 — Rust Project Scaffolding
 
-**Status:** TODO
+**Status:** Done
 
 ## Goal
 
