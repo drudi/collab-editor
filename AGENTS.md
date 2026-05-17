@@ -2,7 +2,7 @@
 
 ## Repo state
 
-No code yet. `collab-editor-spec.md` is the source of truth for architecture, tech stack, and phased plan.
+Planning phase. `collab-editor-spec.md` is the source of truth for architecture, tech stack, and phased plan. See `docs/plan/tasks/` for the detailed task breakdown.
 
 ## When scaffolding
 
