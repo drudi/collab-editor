@@ -1,6 +1,6 @@
 # P1-T02 — Module Directory Structure
 
-**Status:** TODO
+**Status:** Done
 
 ## Goal
 

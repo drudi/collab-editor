@@ -1,6 +1,6 @@
 # P1-T03 — Error Types Module
 
-**Status:** TODO
+**Status:** Done
 
 ## Goal
 

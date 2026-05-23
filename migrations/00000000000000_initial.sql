@@ -1,0 +1,1 @@
+-- Placeholder migration. Real migrations will be added in subsequent tasks.

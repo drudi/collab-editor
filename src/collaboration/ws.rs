@@ -1,0 +1,1 @@
+//! WebSocket room handler — per-room connection management.

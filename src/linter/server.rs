@@ -1,0 +1,1 @@
+//! LSP server process manager — spawn and communicate with external LSP processes.

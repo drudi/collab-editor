@@ -1,0 +1,1 @@
+//! Room creation handler — POST /api/rooms

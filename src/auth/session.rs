@@ -1,0 +1,1 @@
+//! Session middleware — Axum extractor for validating session cookies.

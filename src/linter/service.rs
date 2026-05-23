@@ -1,0 +1,1 @@
+//! Linter service — bridges room collaboration events with LSP diagnostics.

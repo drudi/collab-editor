@@ -1,0 +1,1 @@
+//! Logout handler — POST /api/auth/logout

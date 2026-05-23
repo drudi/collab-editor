@@ -1,0 +1,1 @@
+//! LSP protocol types — JSON-RPC message envelope and method definitions.

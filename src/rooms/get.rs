@@ -1,0 +1,1 @@
+//! Room metadata handler — GET /api/rooms/:id

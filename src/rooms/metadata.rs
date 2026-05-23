@@ -1,0 +1,1 @@
+//! Room metadata update handler — PATCH /api/rooms/:id

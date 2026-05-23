@@ -1,0 +1,1 @@
+//! Room state manager — in-memory Yjs document, awareness, and broadcast.

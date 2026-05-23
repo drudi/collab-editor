@@ -1,0 +1,1 @@
+//! Login handler — POST /api/auth/login

@@ -1,6 +1,6 @@
 # P1-T04 — Shared Models
 
-**Status:** TODO
+**Status:** Done
 
 ## Goal
 

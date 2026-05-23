@@ -1,0 +1,1 @@
+//! Registration handler — POST /api/auth/register
