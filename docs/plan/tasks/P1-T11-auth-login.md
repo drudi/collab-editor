@@ -1,6 +1,6 @@
 # P1-T11 — Auth: Login
 
-**Status:** TODO
+**Status:** Done
 
 ## Goal
 

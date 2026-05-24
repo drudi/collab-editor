@@ -7,6 +7,7 @@
 **Completed tasks:**
 - ✅ P1-T01: Rust project scaffolding (`Cargo.toml` + `src/main.rs` with `build_app()` → `Router::new()`)
 - ✅ P1-T10: Auth registration (`POST /api/auth/register` — input validation, argon2id password hashing, session creation, HttpOnly cookie)
+- ✅ P1-T11: Auth login (`POST /api/auth/login` — user lookup, argon2 password verification, session creation, HttpOnly cookie)
 
 **Remaining:** 50 tasks across 4 phases. See `docs/plan/tasks/` for the full task breakdown with statuses.
 
@@ -83,7 +84,7 @@ frontend/
 ## Implementation order (critical path)
 
 ```
-P1-T01 → P1-T02 → P1-T04 → P1-T05/P1-T06/P1-T07/P1-T08 → P1-T09 → P1-T11 → P1-T12 → P1-T14 → P1-T15
+P1-T01 → P1-T02 → P1-T04 → P1-T05/P1-T06/P1-T07/P1-T08 → P1-T09 → P1-T11 ✅ → P1-T12 → P1-T14 → P1-T15
                              → P1-T10 → P1-T13
 P1-T16 → P1-T17, P1-T18 → P1-T19 → P1-T20, P1-T21
 

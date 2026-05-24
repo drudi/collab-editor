@@ -19,6 +19,7 @@ use tower_http::cors::CorsLayer;
 ///
 /// # Current routes
 /// - `POST /api/auth/register` — user registration
+/// - `POST /api/auth/login`    — user login
 ///
 /// # Development
 /// The server binds to `0.0.0.0:3000`. CORS is configured for
@@ -26,6 +27,7 @@ use tower_http::cors::CorsLayer;
 pub fn build_app(pool: SqlitePool) -> Router {
     Router::new()
         .route("/api/auth/register", post(auth::register::register_handler))
+        .route("/api/auth/login",    post(auth::login::login_handler))
         .with_state(pool)
         .layer(
             CorsLayer::new()
