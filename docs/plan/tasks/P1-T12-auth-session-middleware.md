@@ -1,6 +1,6 @@
 # P1-T12 — Auth: Session Middleware
 
-**Status:** TODO
+**Status:** Done
 
 ## Goal
 

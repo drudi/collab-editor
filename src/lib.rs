@@ -11,7 +11,7 @@ pub mod db;
 pub mod models;
 pub mod error;
 
-use axum::{routing::post, Router};
+use axum::{routing::get, routing::post, Router};
 use sqlx::SqlitePool;
 use tower_http::cors::CorsLayer;
 
@@ -28,6 +28,7 @@ pub fn build_app(pool: SqlitePool) -> Router {
     Router::new()
         .route("/api/auth/register", post(auth::register::register_handler))
         .route("/api/auth/login",    post(auth::login::login_handler))
+        .route("/api/auth/me",       get(auth::session::me_handler))
         .with_state(pool)
         .layer(
             CorsLayer::new()
