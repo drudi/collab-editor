@@ -34,6 +34,7 @@ pub fn build_app(pool: SqlitePool) -> Router {
         .route("/api/rooms",         post(rooms::create::create_room_handler))
         .route("/api/rooms",         get(rooms::list::list_rooms_handler))
         .route("/api/rooms/{id}",     get(rooms::get::get_room_handler))
+        .route("/ws/room/{room_id}", get(collaboration::ws::ws_handler))
         .with_state(pool)
         .layer(
             CorsLayer::new()

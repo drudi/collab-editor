@@ -5,7 +5,7 @@ edition = "2021"
 
 [dependencies]
 # Web framework
-axum = { version = "0.8", features = ["macros"] }
+axum = { version = "0.8", features = ["macros", "ws"] }
 
 # Async runtime
 tokio = { version = "1", features = ["full"] }
@@ -42,6 +42,12 @@ uuid = { version = "1", features = ["v4", "serde"] }
 # Random token generation
 rand = "0.9"
 
+# Concurrent hash map for room store
+dashmap = "6"
+
 # Logging
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# Futures utilities
+futures = "0.3"
