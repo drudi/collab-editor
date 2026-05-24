@@ -1,0 +1,44 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT id, room_id, content_snapshot, version, saved_at\n            FROM documents\n            WHERE room_id = $1\n            ORDER BY version DESC\n            LIMIT 1",
+  "describe": {
+    "columns": [
+      {
+        "name": "id",
+        "ordinal": 0,
+        "type_info": "Integer"
+      },
+      {
+        "name": "room_id",
+        "ordinal": 1,
+        "type_info": "Integer"
+      },
+      {
+        "name": "content_snapshot",
+        "ordinal": 2,
+        "type_info": "Blob"
+      },
+      {
+        "name": "version",
+        "ordinal": 3,
+        "type_info": "Integer"
+      },
+      {
+        "name": "saved_at",
+        "ordinal": 4,
+        "type_info": "Datetime"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "e2d4b04a34ea526bc00bc764be93b84cb20cc6354a650d9a88431a4d98e63067"
+}

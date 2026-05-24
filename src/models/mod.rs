@@ -50,7 +50,7 @@ impl FromStr for Language {
 }
 
 /// An application user.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, sqlx::FromRow)]
 pub struct User {
     pub id: i64,
     pub username: String,
@@ -78,7 +78,7 @@ impl From<User> for UserResponse {
 }
 
 /// An active user session tied to a browser cookie.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, sqlx::FromRow)]
 pub struct Session {
     pub id: i64,
     pub user_id: i64,
@@ -88,7 +88,7 @@ pub struct Session {
 }
 
 /// A collaborative editing room.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, sqlx::FromRow)]
 pub struct Room {
     pub id: i64,
     pub code: String,
@@ -121,6 +121,29 @@ pub enum RoomMemberType {
     Viewer,
 }
 
+impl fmt::Display for RoomMemberType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            RoomMemberType::Owner => write!(f, "owner"),
+            RoomMemberType::Editor => write!(f, "editor"),
+            RoomMemberType::Viewer => write!(f, "viewer"),
+        }
+    }
+}
+
+impl std::str::FromStr for RoomMemberType {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "owner" => Ok(RoomMemberType::Owner),
+            "editor" => Ok(RoomMemberType::Editor),
+            "viewer" => Ok(RoomMemberType::Viewer),
+            other => Err(format!("Unknown member type: {other}")),
+        }
+    }
+}
+
 /// A user's membership in a room.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RoomMember {
@@ -133,7 +156,7 @@ pub struct RoomMember {
 }
 
 /// A snapshot of a room's document content.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, sqlx::FromRow)]
 pub struct Document {
     pub id: i64,
     pub room_id: i64,

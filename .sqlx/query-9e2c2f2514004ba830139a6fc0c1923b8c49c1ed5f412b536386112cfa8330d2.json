@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO documents (room_id, content_snapshot, version)\n            VALUES ($1, $2, $3)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": []
+  },
+  "hash": "9e2c2f2514004ba830139a6fc0c1923b8c49c1ed5f412b536386112cfa8330d2"
+}

@@ -37,6 +37,7 @@
 2. **tokio-tungstenite TLS feature** — Use `rustls-tls-webpki-roots`, not `rustls-tls`.
 3. **Rust version** — Must be ≥ 1.95. Older versions (1.83) fail on transitive deps requiring edition2024.
 4. **`cargo run` on empty Router** — The skeleton prints "built successfully" but has no listener. Add HTTP server in a later task.
+5. **sqlx compile-time checks need `.sqlx/` cache** — `query!()` and `migrate!()` macros verify SQL at build time. After any migration change, run `cargo sqlx prepare --database-url <url>` to regenerate the cache. If the cache is stale, builds fail with compile errors — that's by design.
 
 ## Project structure (target)
 
