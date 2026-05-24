@@ -20,6 +20,9 @@ pub enum RoomErrorKind {
 /// Application-wide error type covering all domain errors.
 #[derive(Debug, thiserror::Error)]
 pub enum AppError {
+    #[error("Validation error: {0}")]
+    ValidationError(String),
+
     #[error("Authentication error: {0}")]
     AuthError(String),
 
@@ -42,6 +45,11 @@ pub enum AppError {
 impl IntoResponse for AppError {
     fn into_response(self) -> Response {
         let (status, variant, message) = match &self {
+            AppError::ValidationError(msg) => (
+                StatusCode::BAD_REQUEST,
+                "ValidationError",
+                msg.clone(),
+            ),
             AppError::AuthError(msg) => (StatusCode::UNAUTHORIZED, "AuthError", msg.clone()),
             AppError::RoomError(kind, msg) => {
                 let status = match kind {

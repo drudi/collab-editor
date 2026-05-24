@@ -1,6 +1,6 @@
 # P1-T10 — Auth: Registration
 
-**Status:** TODO
+**Status:** Done
 
 ## Goal
 

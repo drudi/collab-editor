@@ -2,12 +2,13 @@
 
 ## Repo state
 
-**Current status:** Phase 1, Task 1 complete. Minimal Rust skeleton exists (`Cargo.toml` + `src/main.rs` with empty `Router::new()`). No server listener yet.
+**Current status:** Phase 1, Tasks 1–2 complete. Rust project scaffolded with auth registration endpoint, HTTP server on port 3000, DB connection, and CORS support.
 
 **Completed tasks:**
 - ✅ P1-T01: Rust project scaffolding (`Cargo.toml` + `src/main.rs` with `build_app()` → `Router::new()`)
+- ✅ P1-T10: Auth registration (`POST /api/auth/register` — input validation, argon2id password hashing, session creation, HttpOnly cookie)
 
-**Remaining:** 51 tasks across 4 phases. See `docs/plan/tasks/` for the full task breakdown with statuses.
+**Remaining:** 50 tasks across 4 phases. See `docs/plan/tasks/` for the full task breakdown with statuses.
 
 ## Rust toolchain
 
@@ -27,6 +28,7 @@
 | tower-http | 0.6 | fs + trace + cors |
 | argon2 | 0.5 | Stable (0.6 is rc) |
 | uuid | 1 | v4 + serde |
+| rand | 0.9 | Random byte/token generation |
 | tracing / tracing-subscriber | 0.1 / 0.3 | env-filter feature |
 
 **After any dependency change:** run `cargo update` then verify with `cargo check`.
