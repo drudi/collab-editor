@@ -2,14 +2,21 @@
 
 ## Repo state
 
-**Current status:** Phase 1, Tasks 1–2 complete. Rust project scaffolded with auth registration endpoint, HTTP server on port 3000, DB connection, and CORS support.
+**Current status:** Phase 1 COMPLETE ✅. All 21 tasks implemented.
 
 **Completed tasks:**
-- ✅ P1-T01: Rust project scaffolding (`Cargo.toml` + `src/main.rs` with `build_app()` → `Router::new()`)
-- ✅ P1-T10: Auth registration (`POST /api/auth/register` — input validation, argon2id password hashing, session creation, HttpOnly cookie)
-- ✅ P1-T11: Auth login (`POST /api/auth/login` — user lookup, argon2 password verification, session creation, HttpOnly cookie)
+- ✅ P1-T01 through P1-T12: Rust scaffolding, auth registration/login, session middleware
+- ✅ P1-T13: Auth logout (`POST /api/auth/logout` — destroy session, clear cookie)
+- ✅ P1-T14: Room creation (`POST /api/rooms` — protected, 6-char code generation)
+- ✅ P1-T15: Room metadata (`GET /api/rooms/:id` — full room info with owner, members, latest doc)
+- ✅ P1-T16: Frontend scaffold (Vite + React + TS + all deps)
+- ✅ P1-T17: Tailwind CSS setup (PostCSS + dark mode + CSS variables)
+- ✅ P1-T18: Routing (BrowserRouter, 4 pages, ProtectedRoute)
+- ✅ P1-T19: AuthContext + AuthProvider
+- ✅ P1-T20: LoginPage + RegisterPage with AuthForm + validation
+- ✅ P1-T21: HomePage + RoomCard + CreateRoomForm + JoinRoomForm
 
-**Remaining:** 50 tasks across 4 phases. See `docs/plan/tasks/` for the full task breakdown with statuses.
+**Remaining:** 31 tasks across phases 2-4. See `docs/plan/tasks/` for the full task breakdown with statuses.
 
 ## Rust toolchain
 

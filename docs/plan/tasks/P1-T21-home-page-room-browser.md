@@ -1,6 +1,6 @@
 # P1-T21 — Frontend: Home Page + Room Browser
 
-**Status:** TODO
+**Status:** Done
 
 ## Goal
 

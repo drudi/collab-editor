@@ -1,6 +1,6 @@
 # P1-T18 — Frontend: Routing Setup
 
-**Status:** TODO
+**Status:** Done
 
 ## Goal
 

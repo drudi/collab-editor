@@ -144,7 +144,7 @@ pub async fn login_handler(
         .insert(
             axum::http::header::SET_COOKIE,
             axum::http::header::HeaderValue::from_str(&format!(
-                "session={}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age={}",
+                "session={}; HttpOnly; SameSite=Lax; Path=/; Max-Age={}",
                 token,
                 7 * 24 * 60 * 60
             ))

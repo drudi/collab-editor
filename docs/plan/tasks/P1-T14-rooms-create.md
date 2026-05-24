@@ -1,6 +1,6 @@
 # P1-T14 — Rooms: Create
 
-**Status:** TODO
+**Status:** Done
 
 ## Goal
 

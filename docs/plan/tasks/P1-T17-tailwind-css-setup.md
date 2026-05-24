@@ -1,6 +1,6 @@
 # P1-T17 — Frontend: Tailwind CSS Setup
 
-**Status:** TODO
+**Status:** Done
 
 ## Goal
 

@@ -12,7 +12,8 @@
 //! }
 //! ```
 
-use axum::extract::{FromRequest, Request};
+use axum::extract::FromRequestParts;
+use axum::http::request::Parts;
 use sqlx::SqlitePool;
 
 use crate::db;
@@ -25,16 +26,16 @@ use crate::models::User;
 #[derive(Debug, Clone)]
 pub struct ValidSession(pub User);
 
-impl FromRequest<SqlitePool> for ValidSession {
+impl FromRequestParts<SqlitePool> for ValidSession {
     type Rejection = AppError;
 
-    async fn from_request(
-        req: Request,
+    async fn from_request_parts(
+        req: &mut Parts,
         pool: &SqlitePool,
     ) -> Result<Self, Self::Rejection> {
         // ── 1. Read the Cookie header and find the `session` token ──
         let cookie_header = req
-            .headers()
+            .headers
             .get(axum::http::header::COOKIE)
             .ok_or_else(|| AppError::AuthError("Missing Cookie header".into()))?;
 
@@ -92,7 +93,7 @@ fn extract_cookie_value(cookie_str: &str, name: &str) -> Option<String> {
 /// Matches the format used in register/login handlers for consistency.
 pub fn session_cookie_string(token: &str) -> String {
     format!(
-        "session={}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age={}",
+        "session={}; HttpOnly; SameSite=Lax; Path=/; Max-Age={}",
         token,
         7 * 24 * 60 * 60
     )

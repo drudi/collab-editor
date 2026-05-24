@@ -1,6 +1,6 @@
 # P1-T19 — Frontend: Auth Context + Provider
 
-**Status:** TODO
+**Status:** Done
 
 ## Goal
 

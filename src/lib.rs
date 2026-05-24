@@ -11,7 +11,7 @@ pub mod db;
 pub mod models;
 pub mod error;
 
-use axum::{routing::get, routing::post, Router};
+use axum::{routing::get, routing::post, routing::delete, Router};
 use sqlx::SqlitePool;
 use tower_http::cors::CorsLayer;
 
@@ -20,21 +20,27 @@ use tower_http::cors::CorsLayer;
 /// # Current routes
 /// - `POST /api/auth/register` — user registration
 /// - `POST /api/auth/login`    — user login
-///
-/// # Development
-/// The server binds to `0.0.0.0:3000`. CORS is configured for
-/// `http://localhost:5173` (Vite dev server) — tighten in production.
+/// - `GET  /api/auth/me`       — current user profile
+/// - `POST /api/auth/logout`   — logout
+/// - `POST /api/rooms`         — create room
+/// - `GET  /api/rooms`         — list rooms for current user
+/// - `GET  /api/rooms/:id`     — room metadata
 pub fn build_app(pool: SqlitePool) -> Router {
     Router::new()
         .route("/api/auth/register", post(auth::register::register_handler))
         .route("/api/auth/login",    post(auth::login::login_handler))
         .route("/api/auth/me",       get(auth::session::me_handler))
+        .route("/api/auth/logout",   delete(auth::logout::logout_handler))
+        .route("/api/rooms",         post(rooms::create::create_room_handler))
+        .route("/api/rooms",         get(rooms::list::list_rooms_handler))
+        .route("/api/rooms/{id}",     get(rooms::get::get_room_handler))
         .with_state(pool)
         .layer(
             CorsLayer::new()
                 .allow_methods([
                     axum::http::Method::GET,
                     axum::http::Method::POST,
+                    axum::http::Method::DELETE,
                     axum::http::Method::OPTIONS,
                 ])
                 .allow_headers([axum::http::header::CONTENT_TYPE]),

@@ -1,0 +1,62 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT r.id, r.code, r.name, r.description, r.language, r.owner_id, r.created_at,\n                u.username as owner_username\n            FROM rooms r\n            JOIN room_members rm ON rm.room_id = r.id\n            JOIN users u ON u.id = r.owner_id\n            WHERE rm.user_id = $1\n            ORDER BY r.created_at DESC",
+  "describe": {
+    "columns": [
+      {
+        "name": "id",
+        "ordinal": 0,
+        "type_info": "Integer"
+      },
+      {
+        "name": "code",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "name",
+        "ordinal": 2,
+        "type_info": "Text"
+      },
+      {
+        "name": "description",
+        "ordinal": 3,
+        "type_info": "Text"
+      },
+      {
+        "name": "language",
+        "ordinal": 4,
+        "type_info": "Text"
+      },
+      {
+        "name": "owner_id",
+        "ordinal": 5,
+        "type_info": "Integer"
+      },
+      {
+        "name": "created_at",
+        "ordinal": 6,
+        "type_info": "Datetime"
+      },
+      {
+        "name": "owner_username",
+        "ordinal": 7,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      true,
+      false,
+      true,
+      false
+    ]
+  },
+  "hash": "0a10fdcae313f6451e45c5f076e29b1b392ebea4c0f465c49307549a38aa9c5e"
+}

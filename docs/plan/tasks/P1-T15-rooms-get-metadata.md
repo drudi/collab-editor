@@ -1,6 +1,6 @@
 # P1-T15 — Rooms: Get Metadata
 
-**Status:** TODO
+**Status:** Done
 
 ## Goal
 

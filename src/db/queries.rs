@@ -11,6 +11,17 @@ use sqlx::{query, SqlitePool};
 
 use crate::models::{Document, Room, RoomMemberType, Session, User};
 
+/// Intermediate struct for fetching room members with user data.
+pub struct RoomMemberWithUser {
+    pub id: i64,
+    pub room_id: i64,
+    pub user_id: i64,
+    pub member_type: RoomMemberType,
+    pub created_at: chrono::NaiveDateTime,
+    pub username: String,
+    pub user_created_at: chrono::NaiveDateTime,
+}
+
 // ── Users ────────────────────────────────────────────────────────────────
 
 /// Insert a new user. Returns the new row's `id`.
@@ -208,6 +219,38 @@ pub async fn add_room_member(
     Ok(())
 }
 
+/// Fetch all rooms that a user is a member of, with owner info.
+pub async fn get_rooms_by_user_id(
+    pool: &SqlitePool,
+    user_id: i64,
+) -> Result<Vec<(Room, String)>, sqlx::Error> {
+    query!(
+        r#"SELECT r.id, r.code, r.name, r.description, r.language, r.owner_id, r.created_at,
+                u.username as owner_username
+            FROM rooms r
+            JOIN room_members rm ON rm.room_id = r.id
+            JOIN users u ON u.id = r.owner_id
+            WHERE rm.user_id = $1
+            ORDER BY r.created_at DESC"#,
+        user_id,
+    )
+    .map(|row| {
+        let room = Room {
+            id: row.id,
+            code: row.code,
+            name: row.name,
+            description: row.description,
+            language: row.language.as_deref().map(|s| s.parse()).transpose().expect("language parse failed"),
+            owner_id: row.owner_id,
+            created_at: row.created_at.expect("created_at has DEFAULT"),
+        };
+        let owner_username = row.owner_username;
+        (room, owner_username)
+    })
+    .fetch_all(pool)
+    .await
+}
+
 /// Fetch all members of a room as (user_id, username, member_type).
 pub async fn get_room_members(
     pool: &SqlitePool,
@@ -226,6 +269,32 @@ pub async fn get_room_members(
             row.username,
             row.member_type.parse().expect("member_type parse failed"),
         )
+    })
+    .fetch_all(pool)
+    .await
+}
+
+/// Fetch all room members with full user data.
+pub async fn get_room_members_with_user(
+    pool: &SqlitePool,
+    room_id: i64,
+) -> Result<Vec<RoomMemberWithUser>, sqlx::Error> {
+    query!(
+        r#"SELECT rm.id, rm.room_id, rm.user_id, rm.member_type, rm.created_at,
+                u.username, u.created_at as user_created_at
+            FROM room_members rm
+            JOIN users u ON u.id = rm.user_id
+            WHERE rm.room_id = $1"#,
+        room_id,
+    )
+    .map(|row| RoomMemberWithUser {
+        id: row.id.expect("id is PK"),
+        room_id: row.room_id,
+        user_id: row.user_id,
+        member_type: row.member_type.parse().expect("member_type parse failed"),
+        created_at: row.created_at.expect("created_at has DEFAULT"),
+        username: row.username,
+        user_created_at: row.user_created_at.expect("user created_at has DEFAULT"),
     })
     .fetch_all(pool)
     .await

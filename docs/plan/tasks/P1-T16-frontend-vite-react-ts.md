@@ -1,6 +1,6 @@
 # P1-T16 — Frontend: Vite + React + TS + Dependencies
 
-**Status:** TODO
+**Status:** Done
 
 ## Goal
 

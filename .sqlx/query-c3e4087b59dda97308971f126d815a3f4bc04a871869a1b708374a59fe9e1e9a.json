@@ -1,0 +1,56 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT rm.id, rm.room_id, rm.user_id, rm.member_type, rm.created_at,\n                u.username, u.created_at as user_created_at\n            FROM room_members rm\n            JOIN users u ON u.id = rm.user_id\n            WHERE rm.room_id = $1",
+  "describe": {
+    "columns": [
+      {
+        "name": "id",
+        "ordinal": 0,
+        "type_info": "Integer"
+      },
+      {
+        "name": "room_id",
+        "ordinal": 1,
+        "type_info": "Integer"
+      },
+      {
+        "name": "user_id",
+        "ordinal": 2,
+        "type_info": "Integer"
+      },
+      {
+        "name": "member_type",
+        "ordinal": 3,
+        "type_info": "Text"
+      },
+      {
+        "name": "created_at",
+        "ordinal": 4,
+        "type_info": "Datetime"
+      },
+      {
+        "name": "username",
+        "ordinal": 5,
+        "type_info": "Text"
+      },
+      {
+        "name": "user_created_at",
+        "ordinal": 6,
+        "type_info": "Datetime"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      true,
+      false,
+      false,
+      false,
+      true,
+      false,
+      true
+    ]
+  },
+  "hash": "c3e4087b59dda97308971f126d815a3f4bc04a871869a1b708374a59fe9e1e9a"
+}

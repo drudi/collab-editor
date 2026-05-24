@@ -1,6 +1,6 @@
 # P1-T20 — Frontend: Login + Register Pages
 
-**Status:** TODO
+**Status:** Done
 
 ## Goal
 
