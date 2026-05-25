@@ -21,6 +21,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 
 import { useWebSocket } from '../hooks/useWebSocket';
+import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
 import { useYjs } from '../collab/useYjs';
 import { createCmYjsBinding } from '../collab/cm-yjs-binding';
 import { getLanguageExtension, getLanguageName, getDefaultLanguage, getSupportedLanguages } from '../collab/languages';
@@ -67,6 +68,8 @@ export function RoomPage(): JSX.Element {
   const [error, setError] = useState<string | null>(null);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('unsaved');
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
+  const [isEditorFocused, setIsEditorFocused] = useState(false);
 
   // WebSocket hook — manages the connection to the room
   const { sendMessage, reconnect, isConnected } = useWebSocket(roomId || '', {
@@ -155,6 +158,12 @@ export function RoomPage(): JSX.Element {
     }, 500);
   };
 
+  // Toast notification handler
+  const showToast = useCallback((message: string) => {
+    setToast(message);
+    setTimeout(() => setToast(null), 1500);
+  }, []);
+
   // Send cursor position updates
   useEffect(() => {
     const handler = (event: Event) => {
@@ -199,6 +208,13 @@ export function RoomPage(): JSX.Element {
     doc.on('update', handleChange);
     return () => doc.off('update', handleChange);
   }, [doc]);
+
+  // Keyboard shortcuts hook (P4-T05)
+  useKeyboardShortcuts(editorViewRef.current, {
+    onSave: handleSave,
+    onToast: showToast,
+    isEditorFocused,
+  });
 
   // ─── Render ──────────────────────────────────────────────────────────────
 
@@ -295,7 +311,11 @@ export function RoomPage(): JSX.Element {
         </div>
 
         {/* Editor container */}
-        <div className="flex-1 relative overflow-hidden">
+        <div
+          className="flex-1 relative overflow-hidden"
+          onFocus={() => setIsEditorFocused(true)}
+          onBlur={() => setIsEditorFocused(false)}
+        >
           <div
             ref={editorContainerRef}
             className="w-full h-full"
@@ -312,6 +332,18 @@ export function RoomPage(): JSX.Element {
 
           {/* Auto-save indicator — bottom-right of editor area (P4-T02, AC7) */}
           <AutoSaveIndicator status={saveStatus} />
+
+          {/* Toast notification for keyboard shortcut feedback (P4-T05, AC9) */}
+          {toast && (
+            <div
+              className="absolute bottom-16 right-4 px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm text-gray-200 shadow-lg transition-opacity duration-300"
+              style={{ opacity: 0.95 }}
+              role="status"
+              aria-live="polite"
+            >
+              {toast}
+            </div>
+          )}
         </div>
       </div>
 
