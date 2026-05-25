@@ -1,6 +1,6 @@
 # P2-T12 — Frontend Room Page Layout
 
-**Status:** TODO
+**Status:** Done
 
 ## Goal
 

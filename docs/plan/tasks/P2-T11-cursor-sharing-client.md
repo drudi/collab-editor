@@ -1,6 +1,6 @@
 # P2-T11 — Cursor Sharing: Client
 
-**Status:** TODO
+**Status:** Done
 
 ## Goal
 

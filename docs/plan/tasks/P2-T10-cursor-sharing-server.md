@@ -1,6 +1,6 @@
 # P2-T10 — Cursor Sharing: Server
 
-**Status:** TODO
+**Status:** Done
 
 ## Goal
 

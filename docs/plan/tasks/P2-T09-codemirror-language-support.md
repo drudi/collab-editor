@@ -1,6 +1,6 @@
 # P2-T09 — CodeMirror Language Support
 
-**Status:** TODO
+**Status:** Done
 
 ## Goal
 

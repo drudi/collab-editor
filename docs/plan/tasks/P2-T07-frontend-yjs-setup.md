@@ -1,6 +1,6 @@
 # P2-T07 — Frontend Yjs Setup
 
-**Status:** TODO
+**Status:** Done
 
 ## Goal
 

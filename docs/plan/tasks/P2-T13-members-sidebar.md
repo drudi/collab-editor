@@ -1,6 +1,6 @@
 # P2-T13 — Members Sidebar
 
-**Status:** TODO
+**Status:** Done
 
 ## Goal
 

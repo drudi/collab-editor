@@ -1,6 +1,6 @@
 # P2-T08 — CodeMirror + Yjs Binding
 
-**Status:** TODO
+**Status:** Done
 
 ## Goal
 

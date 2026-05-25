@@ -1,6 +1,6 @@
 # P2-T06 — Frontend WebSocket Hook
 
-**Status:** TODO
+**Status:** Done
 
 ## Goal
 
