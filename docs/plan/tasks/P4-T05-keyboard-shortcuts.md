@@ -1,6 +1,6 @@
 # P4-T05 — Keyboard Shortcuts
 
-**Status:** TODO
+**Status:** Done
 
 ## Goal
 

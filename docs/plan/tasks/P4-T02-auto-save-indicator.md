@@ -1,6 +1,6 @@
 # P4-T02 — Auto-Save Indicator
 
-**Status:** TODO
+**Status:** Done
 
 ## Goal
 

@@ -1,6 +1,6 @@
 # P4-T03 — Document Metadata
 
-**Status:** TODO
+**Status:** Done
 
 ## Goal
 

@@ -1,6 +1,6 @@
 # P4-T06 — Error Boundary + Loading States
 
-**Status:** TODO
+**Status:** Done
 
 ## Goal
 

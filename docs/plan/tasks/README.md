@@ -67,12 +67,12 @@
 
 | ID | Task | Summary | Time | Depends On | Status |
 |----|------|---------|------|------------|--------|
-| P4-T01 | Document persistence | `db/queries.rs`: `save_document(roomId, contentSnapshot)` — BLOB INSERT/REPLACE. `get_latest_document(roomId)` — latest row SELECT. Call `save_document` every 30s + on room close via `tokio::task::spawn`. | 1.5h | P1-T08 | ⬜ Todo |
-| P4-T02 | Auto-save indicator | `src/components/AutoSaveIndicator.tsx`: shows "Saving...", "Saved", "Unsaved changes" with icon. Tied to WS message send timestamps — pulse green on save confirm. | 30min | P4-T01 | ⬜ Todo |
-| P4-T03 | Document metadata | `rooms/metadata.rs`: `GET /api/rooms/:id/metadata` — returns `{name, description, language, owner, members, version, lastSavedAt}`. Room edit: `PATCH /api/rooms/:id` — update name/description/language. | 1h | P1-T15 | ⬜ Todo |
-| P4-T04 | Settings page | `src/pages/SettingsPage.tsx`: tabbed layout. Tab 1: account (username, change password). Tab 2: editor (font size 12-20, tab width 2-4, theme toggle). Tab 3: notifications. Persists to localStorage. | 1.5h | P1-T18 | ⬜ Todo |
-| P4-T05 | Keyboard shortcuts | `src/hooks/useKeyboardShortcuts.ts`: Ctrl+S save, Ctrl+/ toggle comments, Ctrl+Z/Y undo/redo (pass through to CodeMirror `basicSetup`). Ctrl+Shift+F find/replace via CodeMirror search add-on. | 1h | P2-T08 | ⬜ Todo |
-| P4-T06 | Error boundary + loading | `src/components/ErrorBoundary.tsx`: catches React errors, shows fallback with "Try again" button. `src/components/LoadingSpinner.tsx`: centered spinner for auth loading, room loading, editor loading states. | 30min | P1-T18 | ⬜ Todo |
+| P4-T01 | Document persistence | 1.5h | P1-T08 | ✅ Done |
+| P4-T02 | Auto-save indicator | 30min | P4-T01 | ✅ Done |
+| P4-T03 | Document metadata | 1h | P1-T15 | ✅ Done |
+| P4-T04 | Settings page | 1.5h | P1-T18 | ✅ Done |
+| P4-T05 | Keyboard shortcuts | 1h | P2-T08 | ✅ Done |
+| P4-T06 | Error boundary + loading | 30min | P1-T18 | ✅ Done |
 
 ---
 

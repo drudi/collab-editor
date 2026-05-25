@@ -1,6 +1,6 @@
 # P4-T04 — Settings Page
 
-**Status:** TODO
+**Status:** Done
 
 ## Goal
 
