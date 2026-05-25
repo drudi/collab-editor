@@ -2,21 +2,14 @@
 
 ## Repo state
 
-**Current status:** Phase 1 COMPLETE ✅. All 21 tasks implemented.
+**Current status:** ALL PHASES COMPLETE ✅. All 52 tasks implemented across 4 phases.
 
-**Completed tasks:**
-- ✅ P1-T01 through P1-T12: Rust scaffolding, auth registration/login, session middleware
-- ✅ P1-T13: Auth logout (`POST /api/auth/logout` — destroy session, clear cookie)
-- ✅ P1-T14: Room creation (`POST /api/rooms` — protected, 6-char code generation)
-- ✅ P1-T15: Room metadata (`GET /api/rooms/:id` — full room info with owner, members, latest doc)
-- ✅ P1-T16: Frontend scaffold (Vite + React + TS + all deps)
-- ✅ P1-T17: Tailwind CSS setup (PostCSS + dark mode + CSS variables)
-- ✅ P1-T18: Routing (BrowserRouter, 4 pages, ProtectedRoute)
-- ✅ P1-T19: AuthContext + AuthProvider
-- ✅ P1-T20: LoginPage + RegisterPage with AuthForm + validation
-- ✅ P1-T21: HomePage + RoomCard + CreateRoomForm + JoinRoomForm
+- ✅ Phase 1 (Foundation): 21 tasks — Rust scaffolding, auth, rooms, frontend scaffold, routing
+- ✅ Phase 2 (Collaboration): 13 tasks — WebSocket, Yjs CRDT sync, CodeMirror binding, cursor sharing
+- ✅ Phase 3 (Linting): 4 tasks — LSP integration, diagnostics
+- ✅ Phase 4 (Polish): 6 tasks — persistence, auto-save, settings, shortcuts, error handling
 
-**Remaining:** 31 tasks across phases 2-4. See `docs/plan/tasks/` for the full task breakdown with statuses.
+See `docs/plan/tasks/` for the full task breakdown.
 
 ## Rust toolchain
 
