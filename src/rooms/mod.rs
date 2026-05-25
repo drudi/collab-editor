@@ -9,3 +9,6 @@ pub mod create;
 pub mod get;
 pub mod list;
 pub mod metadata;
+
+pub use metadata::{get_metadata_handler, update_room_handler};
+pub use metadata::UpdateRoomRequest;

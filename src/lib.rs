@@ -11,7 +11,7 @@ pub mod db;
 pub mod models;
 pub mod error;
 
-use axum::{routing::get, routing::post, routing::delete, Router};
+use axum::{routing::get, routing::post, routing::delete, routing::patch, Router};
 use sqlx::SqlitePool;
 use tower_http::cors::CorsLayer;
 
@@ -25,6 +25,8 @@ use tower_http::cors::CorsLayer;
 /// - `POST /api/rooms`         — create room
 /// - `GET  /api/rooms`         — list rooms for current user
 /// - `GET  /api/rooms/:id`     — room metadata
+/// - `GET  /api/rooms/:id/metadata` — detailed room metadata
+/// - `PATCH /api/rooms/:id`    — edit room properties
 pub fn build_app(pool: SqlitePool) -> Router {
     Router::new()
         .route("/api/auth/register", post(auth::register::register_handler))
@@ -33,14 +35,17 @@ pub fn build_app(pool: SqlitePool) -> Router {
         .route("/api/auth/logout",   delete(auth::logout::logout_handler))
         .route("/api/rooms",         post(rooms::create::create_room_handler))
         .route("/api/rooms",         get(rooms::list::list_rooms_handler))
-        .route("/api/rooms/{id}",     get(rooms::get::get_room_handler))
-        .route("/ws/room/{room_id}", get(collaboration::ws::ws_handler))
+        .route("/api/rooms/{id}",      get(rooms::get::get_room_handler))
+        .route("/api/rooms/{id}/metadata", get(rooms::get_metadata_handler))
+        .route("/api/rooms/{id}",        patch(rooms::update_room_handler))
+        .route("/ws/room/{room_id}",     get(collaboration::ws::ws_handler))
         .with_state(pool)
         .layer(
             CorsLayer::new()
                 .allow_methods([
                     axum::http::Method::GET,
                     axum::http::Method::POST,
+                    axum::http::Method::PATCH,
                     axum::http::Method::DELETE,
                     axum::http::Method::OPTIONS,
                 ])
