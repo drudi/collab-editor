@@ -36,6 +36,9 @@ dist/
 # Docs (generated)
 *.pdf
 
+# Database
+*.db
+
 
 # Added by cargo
 
