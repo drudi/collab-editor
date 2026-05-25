@@ -4,6 +4,7 @@ import { HomePage } from './pages/HomePage';
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
 import { RoomPage } from './pages/RoomPage';
+import { SettingsPage } from './pages/SettingsPage';
 
 export function App() {
   return (
@@ -24,6 +25,14 @@ export function App() {
           element={
             <ProtectedRoute>
               <RoomPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute>
+              <SettingsPage />
             </ProtectedRoute>
           }
         />
