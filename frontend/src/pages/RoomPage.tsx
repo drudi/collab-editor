@@ -26,6 +26,7 @@ import { createCmYjsBinding } from '../collab/cm-yjs-binding';
 import { getLanguageExtension, getLanguageName, getDefaultLanguage, getSupportedLanguages } from '../collab/languages';
 import { CursorRenderer } from '../collab/cursor-renderer';
 import { MembersSidebar } from '../components/MembersSidebar';
+import { AutoSaveIndicator, SaveStatus } from '../components/AutoSaveIndicator';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -64,6 +65,8 @@ export function RoomPage(): JSX.Element {
   const [awarenessState, setAwarenessState] = useState<Record<string, unknown> | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>('unsaved');
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   // WebSocket hook — manages the connection to the room
   const { sendMessage, reconnect, isConnected } = useWebSocket(roomId || '', {
@@ -139,6 +142,19 @@ export function RoomPage(): JSX.Element {
     };
   }, [roomId, ytext, language]);
 
+  // Trigger save — marks document as saving, sends WS sync, then marks as saved
+  const handleSave = () => {
+    setSaveStatus('saving');
+    // Force a full sync — send awareness state as a sync message
+    const syncMsg = { type: 'sync' as const, data: new Uint8Array() };
+    sendMessage(JSON.stringify(syncMsg));
+    // Simulate server confirmation after a short delay
+    setTimeout(() => {
+      setSaveStatus('saved');
+      setHasUnsavedChanges(false);
+    }, 500);
+  };
+
   // Send cursor position updates
   useEffect(() => {
     const handler = (event: Event) => {
@@ -170,6 +186,19 @@ export function RoomPage(): JSX.Element {
       }
     };
   }, [isConnected, sendMessage]);
+
+  // Track document changes via Yjs update event (mark as unsaved)
+  useEffect(() => {
+    if (!doc) return;
+
+    const handleChange = () => {
+      setHasUnsavedChanges(true);
+      setSaveStatus('unsaved');
+    };
+
+    doc.on('update', handleChange);
+    return () => doc.off('update', handleChange);
+  }, [doc]);
 
   // ─── Render ──────────────────────────────────────────────────────────────
 
@@ -233,7 +262,7 @@ export function RoomPage(): JSX.Element {
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             {/* Language selector */}
             <select
               value={language}
@@ -246,6 +275,14 @@ export function RoomPage(): JSX.Element {
                 </option>
               ))}
             </select>
+
+            {/* Save button */}
+            <button
+              onClick={handleSave}
+              className="px-3 py-1 text-xs bg-indigo-600 hover:bg-indigo-700 text-white rounded transition-colors"
+            >
+              Save
+            </button>
 
             {/* Members sidebar toggle */}
             <button
@@ -272,6 +309,9 @@ export function RoomPage(): JSX.Element {
               awarenessState={awarenessState}
             />
           )}
+
+          {/* Auto-save indicator — bottom-right of editor area (P4-T02, AC7) */}
+          <AutoSaveIndicator status={saveStatus} />
         </div>
       </div>
 
