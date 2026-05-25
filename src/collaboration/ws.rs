@@ -66,30 +66,34 @@ async fn handle_ws(
         room_id
     );
 
-    // Add client to room state
-    let client_tx = room_state
-        .add_client(client_id, "anonymous".to_string())
-        .await;
+    // Add client to room state.
+    // The room state creates a channel for broadcasting to this client.
+    // We read from the channel in the main loop and forward to `ws`.
+    let (_client_tx, mut client_rx) = room_state.add_client(client_id, "anonymous".to_string()).await;
 
     // Load persisted snapshot if available (P4-T01, AC8)
     let doc = room_state.get_doc().await;
-    let was_loaded = load_latest_document(&pool, room_id.parse::<i64>().unwrap_or(0), &doc).await;
+    // Look up the numeric room ID from the code
+    let room_id_i64 = sqlx::query_scalar::<_, i64>("SELECT id FROM rooms WHERE code = ? LIMIT 1")
+        .bind(&room_id)
+        .fetch_optional(&pool)
+        .await
+        .ok()
+        .flatten()
+        .unwrap_or(0);
+    let was_loaded = load_latest_document(&pool, room_id_i64, &doc).await;
     if was_loaded.is_ok() {
         tracing::debug!("Document loaded for room {}", room_id);
     } else {
         tracing::debug!("No document snapshot for room {}", room_id);
     }
 
-    // Send initial full state to the new client
+    // Send initial full state to the new client via `ws` directly
     let initial_state = room_state.get_full_state_update().await;
-    let initial_msg = WsMessage::sync(initial_state);
+    let initial_msg = WsMessage::sync(initial_state.clone());
     if let Ok(json) = initial_msg.to_json() {
-        if let Err(e) = client_tx
-            .send(tokio_tungstenite::tungstenite::Message::Text(json.into()))
-            .await
-        {
+        if let Err(e) = ws.send(axum::extract::ws::Message::Text(json.into())).await {
             tracing::error!("Failed to send initial state to client {}: {}", client_id, e);
-            let _ = ws.send(axum::extract::ws::Message::Close(None)).await;
             return;
         }
     }
@@ -108,19 +112,19 @@ async fn handle_ws(
     let periodic_room_id = room_id.clone();
     let periodic_room_state = room_state.clone();
     let periodic_pool = pool.clone();
+    let periodic_room_id_i64 = room_id_i64;
     tokio::spawn(async move {
         let mut interval = tokio::time::interval(Duration::from_secs(30));
-        interval.tick().await; // first tick immediately
+        interval.tick().await;
         loop {
             interval.tick().await;
             let state = periodic_room_state.get_persist_state().await;
             if !state.is_empty() {
-                let room_id_i64 = periodic_room_id.parse::<i64>().unwrap_or(0);
                 if let Err(e) = crate::db::queries::save_document(
                     &periodic_pool,
-                    room_id_i64,
+                    periodic_room_id_i64,
                     &state,
-                    0, // version tracked by Yjs internally
+                    0,
                 )
                 .await
                 {
@@ -144,6 +148,22 @@ async fn handle_ws(
     loop {
         tokio::select! {
             biased;
+
+            // Forward messages from the room state's broadcast channel
+            // to this client's WebSocket
+            forward_msg = client_rx.recv() => {
+                if let Some(msg) = forward_msg {
+                    // Convert the tungstenite Message to a text string for axum
+                    let text = msg.to_string();
+                    if let Err(e) = ws.send(axum::extract::ws::Message::Text(text.into())).await {
+                        tracing::warn!("Failed to forward broadcast to client {}: {}", client_id, e);
+                        break;
+                    }
+                } else {
+                    // Channel closed
+                    break;
+                }
+            }
 
             // Health ping (application-level via WsMessage::Ping)
             _ = ping_interval.tick() => {
@@ -177,13 +197,16 @@ async fn handle_ws(
                                         }),
                                     ).await;
 
-                                    // Broadcast updated awareness
+                                    // Broadcast updated awareness to other clients via room state
                                     let awareness_states = room_state.get_awareness_states().await;
                                     if let Ok(awareness_json) = serde_json::to_string(&awareness_states) {
                                         let msg = WsMessage::awareness(awareness_json.into_bytes());
                                         if let Ok(json) = msg.to_json() {
                                             let _ = room_state
-                                                .broadcast(tokio_tungstenite::tungstenite::Message::Text(json.into()), Some(client_id))
+                                                .broadcast(
+                                                    tokio_tungstenite::tungstenite::Message::Text(json.into()),
+                                                    Some(client_id),
+                                                )
                                                 .await;
                                         }
                                     }
@@ -191,9 +214,17 @@ async fn handle_ws(
                                 WsMessage::Ping => {
                                     let pong_msg = WsMessage::Pong;
                                     if let Ok(json) = pong_msg.to_json() {
-                                        let _ = client_tx
-                                            .send(tokio_tungstenite::tungstenite::Message::Text(json.into()))
-                                            .await;
+                                        if let Err(e) = ws.send(
+                                            axum::extract::ws::Message::Text(json.into()),
+                                        )
+                                        .await
+                                        {
+                                            tracing::warn!(
+                                                "Failed to send pong to client {}: {}",
+                                                client_id,
+                                                e
+                                            );
+                                        }
                                     }
                                 }
                                 WsMessage::Pong => {
@@ -205,7 +236,12 @@ async fn handle_ws(
                     }
                     Some(Ok(axum::extract::ws::Message::Close(frame))) => {
                         if let Some(axum::extract::ws::CloseFrame { code, reason }) = frame {
-                            tracing::info!("Close frame from client {}: code={}, reason={}", client_id, code, reason);
+                            tracing::info!(
+                                "Close frame from client {}: code={}, reason={}",
+                                client_id,
+                                code,
+                                reason
+                            );
                         } else {
                             tracing::info!("Close frame received from client {}", client_id);
                         }
@@ -228,7 +264,6 @@ async fn handle_ws(
     // Clean up — save document before cleanup (P4-T01, AC4)
     let persist_state = room_state.get_persist_state().await;
     if !persist_state.is_empty() {
-        let room_id_i64 = room_id.parse::<i64>().unwrap_or(0);
         if let Err(e) = crate::db::queries::save_document(
             &pool,
             room_id_i64,

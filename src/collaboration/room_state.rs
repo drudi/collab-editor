@@ -108,13 +108,15 @@ impl RoomStateInner {
 
     /// Add a new client to the room.
     ///
-    /// Returns the client's send channel for broadcasting.
+    /// Returns `(tx, rx)` where `tx` is stored in the client map for
+    /// `broadcast` to deliver awareness to this client, and `rx` is
+    /// used by the connection handler to forward messages to the WebSocket.
     pub fn add_client(
         &mut self,
         client_id: ClientID,
         username: String,
-    ) -> mpsc::Sender<Message> {
-        let (tx, _rx) = mpsc::channel::<Message>(256);
+    ) -> (mpsc::Sender<Message>, mpsc::Receiver<Message>) {
+        let (tx, rx) = mpsc::channel::<Message>(256);
         let info = ClientInfo {
             client_id,
             username,
@@ -124,7 +126,7 @@ impl RoomStateInner {
             tx: tx.clone(),
         };
         self.clients.insert(client_id, info);
-        tx
+        (tx, rx)
     }
 
     /// Remove a client from the room and clean up awareness.
@@ -337,12 +339,14 @@ impl RoomState {
         }
     }
 
-    /// Add a client and return their send channel.
+    /// Add a client and return their channel pair.
+    /// `tx` is used by `broadcast` to deliver awareness to this client.
+    /// `rx` is used by the connection handler to forward to the WebSocket.
     pub async fn add_client(
         &self,
         client_id: ClientID,
         username: String,
-    ) -> mpsc::Sender<Message> {
+    ) -> (mpsc::Sender<Message>, mpsc::Receiver<Message>) {
         let mut inner = self.inner.write().await;
         inner.add_client(client_id, username)
     }

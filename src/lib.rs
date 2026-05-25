@@ -56,6 +56,12 @@ pub fn build_app(pool: SqlitePool) -> Router {
                     axum::http::Method::DELETE,
                     axum::http::Method::OPTIONS,
                 ])
-                .allow_headers([axum::http::header::CONTENT_TYPE]),
+                .allow_headers([axum::http::header::CONTENT_TYPE])
+                .allow_headers([
+                    axum::http::header::CONNECTION,
+                    axum::http::header::UPGRADE,
+                ])
+                .expose_headers([axum::http::header::SET_COOKIE])
+                .allow_origin(axum::http::HeaderValue::from_static("http://localhost:5173")),
         )
 }
