@@ -28,6 +28,7 @@ import { getLanguageExtension, getLanguageName, getDefaultLanguage, getSupported
 import { CursorRenderer } from '../collab/cursor-renderer';
 import { MembersSidebar } from '../components/MembersSidebar';
 import { AutoSaveIndicator, SaveStatus } from '../components/AutoSaveIndicator';
+import { LoadingSpinner } from '../components/LoadingSpinner';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -218,16 +219,9 @@ export function RoomPage(): JSX.Element {
 
   // ─── Render ──────────────────────────────────────────────────────────────
 
-  // Loading state
+  // Loading state — use LoadingSpinner component (P4-T06, AC5-AC7)
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-950">
-        <div className="text-center">
-          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-gray-600 border-t-indigo-500 mb-4" />
-          <p className="text-gray-400">Connecting...</p>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner label="Connecting..." />;
   }
 
   // Error state
