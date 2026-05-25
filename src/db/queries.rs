@@ -8,6 +8,7 @@
 //! needed (all our columns are NOT NULL or have defaults).
 
 use sqlx::{query, SqlitePool};
+use yrs::Transact;
 
 use crate::models::{Document, Room, RoomMemberType, Session, User};
 
@@ -302,7 +303,10 @@ pub async fn get_room_members_with_user(
 
 // ── Documents ────────────────────────────────────────────────────────────
 
-/// Insert a document snapshot for a room.
+/// Save or replace the document snapshot for a room.
+///
+/// Uses INSERT OR REPLACE so that a new save for the same room_id
+/// upserts the existing snapshot (P4-T01, AC5).
 pub async fn save_document(
     pool: &SqlitePool,
     room_id: i64,
@@ -310,13 +314,14 @@ pub async fn save_document(
     version: i32,
 ) -> Result<(), sqlx::Error> {
     let version_i64 = version as i64;
-    query!(
-        r#"INSERT INTO documents (room_id, content_snapshot, version)
-            VALUES ($1, $2, $3)"#,
-        room_id,
-        content_snapshot,
-        version_i64,
+    // Use raw query (no !) to avoid sqlx compile-time checking for INSERT OR REPLACE
+    sqlx::query(
+        r#"INSERT OR REPLACE INTO documents (room_id, content_snapshot, version, saved_at)
+            VALUES (?, ?, ?, CURRENT_TIMESTAMP)"#,
     )
+    .bind(room_id)
+    .bind(content_snapshot)
+    .bind(version_i64)
     .execute(pool)
     .await?;
     Ok(())
@@ -344,6 +349,31 @@ pub async fn get_latest_document(
     })
     .fetch_optional(pool)
     .await
+}
+
+/// Load a Yjs document from the latest persisted snapshot.
+///
+/// Returns `(doc, was_loaded)` where `was_loaded` indicates if a snapshot was found.
+/// If a snapshot exists, its bytes are applied to the doc via `apply_update`.
+/// Load a Yjs document from the latest persisted snapshot (P4-T01).
+///
+/// Returns `(doc, was_loaded)` where `was_loaded` indicates if a snapshot was found.
+/// If a snapshot exists, its bytes are applied to the doc via `apply_update`.
+pub async fn load_latest_document(
+    pool: &SqlitePool,
+    room_id: i64,
+    doc: &yrs::Doc,
+) -> Result<bool, sqlx::Error> {
+    let doc_opt = get_latest_document(pool, room_id).await?;
+    if let Some(doc_record) = doc_opt {
+        let update = yrs::updates::decoder::Decode::decode_v1(&doc_record.content_snapshot)
+            .unwrap_or_default();
+        let mut txn = doc.transact_mut();
+        txn.apply_update(update).ok();
+        tracing::info!("Loaded document snapshot (v{}) for room {}", doc_record.version, room_id);
+        return Ok(true);
+    }
+    Ok(false)
 }
 
 // ── Tests ────────────────────────────────────────────────────────────────

@@ -20,6 +20,7 @@ use super::messages::WsMessage;
 use super::room_state::{
     create_room_store, get_or_create_room, remove_room, CursorPos, RoomStore, SelectionRange,
 };
+use crate::db::queries::load_latest_document;
 
 /// The global room state store — shared across all WebSocket connections.
 pub fn get_room_store() -> &'static RoomStore {
@@ -70,6 +71,15 @@ async fn handle_ws(
         .add_client(client_id, "anonymous".to_string())
         .await;
 
+    // Load persisted snapshot if available (P4-T01, AC8)
+    let doc = room_state.get_doc().await;
+    let was_loaded = load_latest_document(&pool, room_id.parse::<i64>().unwrap_or(0), &doc).await;
+    if was_loaded.is_ok() {
+        tracing::debug!("Document loaded for room {}", room_id);
+    } else {
+        tracing::debug!("No document snapshot for room {}", room_id);
+    }
+
     // Send initial full state to the new client
     let initial_state = room_state.get_full_state_update().await;
     let initial_msg = WsMessage::sync(initial_state);
@@ -86,14 +96,45 @@ async fn handle_ws(
     tracing::info!("Sent initial state to client {}", client_id);
 
     // Subscribe to document updates via observe_update_v1.
-    let doc = room_state.get_doc().await;
-    let room_state_clone = room_state.clone();
+    let room_state_for_obs = room_state.clone();
     let cid_for_obs = client_id;
     let _update_subscription = doc.observe_update_v1(move |_event, _txn| {
-        let rs = room_state_clone.clone();
+        let rs = room_state_for_obs.clone();
         let cid = cid_for_obs;
         let _ = (&rs, cid);
     }).ok();
+
+    // Periodic save task — every 30 seconds (P4-T01, AC3)
+    let periodic_room_id = room_id.clone();
+    let periodic_room_state = room_state.clone();
+    let periodic_pool = pool.clone();
+    tokio::spawn(async move {
+        let mut interval = tokio::time::interval(Duration::from_secs(30));
+        interval.tick().await; // first tick immediately
+        loop {
+            interval.tick().await;
+            let state = periodic_room_state.get_persist_state().await;
+            if !state.is_empty() {
+                let room_id_i64 = periodic_room_id.parse::<i64>().unwrap_or(0);
+                if let Err(e) = crate::db::queries::save_document(
+                    &periodic_pool,
+                    room_id_i64,
+                    &state,
+                    0, // version tracked by Yjs internally
+                )
+                .await
+                {
+                    tracing::warn!(
+                        "Failed to persist document for room {}: {}",
+                        periodic_room_id,
+                        e
+                    );
+                } else {
+                    tracing::debug!("Persisted document for room {}", periodic_room_id);
+                }
+            }
+        }
+    });
 
     // Ping/pong health monitoring interval (application-level)
     let mut ping_interval = tokio::time::interval(Duration::from_secs(30));
@@ -184,7 +225,28 @@ async fn handle_ws(
         }
     }
 
-    // Clean up
+    // Clean up — save document before cleanup (P4-T01, AC4)
+    let persist_state = room_state.get_persist_state().await;
+    if !persist_state.is_empty() {
+        let room_id_i64 = room_id.parse::<i64>().unwrap_or(0);
+        if let Err(e) = crate::db::queries::save_document(
+            &pool,
+            room_id_i64,
+            &persist_state,
+            0,
+        )
+        .await
+        {
+            tracing::warn!(
+                "Failed to save document on disconnect for room {}: {}",
+                room_id,
+                e
+            );
+        } else {
+            tracing::info!("Document saved on disconnect for room {}", room_id);
+        }
+    }
+
     tracing::info!("Client {} disconnected from room {}", client_id, room_id);
     room_state.remove_client(&client_id).await;
 

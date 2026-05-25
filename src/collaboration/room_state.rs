@@ -286,6 +286,32 @@ impl RoomStateInner {
         // txn.after_state().len() or similar transaction methods.
         0 // placeholder — version tracked separately in room store
     }
+
+    /// Serialize the document to bytes for persistence (P4-T01).
+    ///
+    /// Encodes the full Yjs state as an update via `encode_state_as_update_v1`.
+    pub fn get_persist_state(&self) -> Vec<u8> {
+        let txn = self.doc.transact();
+        txn.encode_state_as_update_v1(&StateVector::default())
+    }
+
+    /// Apply a persisted state snapshot to this document (P4-T01).
+    ///
+    /// Decodes the raw bytes and applies via `apply_update`.
+    pub fn apply_persist_state(&mut self, data: &[u8]) {
+        if data.is_empty() {
+            return;
+        }
+        let update = match Update::decode_v1(data) {
+            Ok(u) => u,
+            Err(_) => {
+                tracing::warn!("Failed to decode persisted update, skipping load");
+                return;
+            }
+        };
+        let mut txn = self.doc.transact_mut();
+        txn.apply_update(update).ok();
+    }
 }
 
 impl Default for RoomStateInner {
@@ -397,6 +423,18 @@ impl RoomState {
     pub async fn get_doc(&self) -> Doc {
         let inner = self.inner.read().await;
         inner.doc.clone()
+    }
+
+    /// Serialize the document to bytes for persistence (P4-T01, AC1).
+    pub async fn get_persist_state(&self) -> Vec<u8> {
+        let inner = self.inner.read().await;
+        inner.get_persist_state()
+    }
+
+    /// Apply a persisted state snapshot to the document (P4-T01, AC8).
+    pub async fn apply_persist_state(&self, data: &[u8]) {
+        let mut inner = self.inner.write().await;
+        inner.apply_persist_state(data);
     }
 }
 
