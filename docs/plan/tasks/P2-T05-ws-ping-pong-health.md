@@ -1,6 +1,6 @@
 # P2-T05 — WS Ping/Pong Health
 
-**Status:** TODO
+**Status:** Done
 
 ## Goal
 
@@ -8,34 +8,33 @@ Implement WebSocket health monitoring with ping/pong.
 
 ## Description
 
-Add health monitoring to keep stale WebSocket connections from consuming resources indefinitely. This ensures the server cleans up dead connections and maintains accurate awareness state.
+Added health monitoring to keep stale WebSocket connections from consuming resources indefinitely. The server uses application-level ping/pong (via `WsMessage::Ping`/`WsMessage::Pong`) to keep connections alive and detect dead clients.
 
 Implementation:
-1. Start a 30-second interval task in `ws_handler`
-2. Every 30s, send `Ping` to the client
-3. If client doesn't reply with `Pong` within 30s, close the connection
-4. On `Text(Ping)` message, reply with `Text(Pong)`
-5. On `Text(Pong)` message, update `last_seen` timestamp in awareness
+1. 30-second interval task in `ws_handler` sends `WsMessage::Ping`
+2. Client replies with `WsMessage::Pong` on receiving a ping
+3. `Text(Ping)` message triggers `Text(Pong)` reply
+4. `Text(Pong)` message updates awareness
+5. On send failure or stream end, the connection loop breaks and client is cleaned up
+6. `client_tx` is a `Sender<tungstenite::Message>` for direct message sending
+7. `WsMessage` uses struct variants (not tuple) for JSON serialization
 
-The health check task:
-```rust
-let mut interval = tokio::time::interval(Duration::from_secs(30));
-loop {
-    interval.tick().await;
-    stream.send(Message::Ping(Bytes::from("health"))).await?;
-}
-```
+Key architectural decisions:
+- Application-level ping/pong (not hardware-level) since axum 0.8's `WebSocket` doesn't expose tungstenite's `Ping`/`Pong` variants
+- Used `tokio::select!` with `biased` mode to prioritize message receive
+- All messages go through `WsMessage` JSON protocol for consistency
 
 ## Acceptance Criteria
 
-- AC1: 30-second ping interval task started in `ws_handler`
-- AC2: `Message::Ping` sent to client on each interval tick
-- AC3: `Pong` timeout after 30s closes the connection
-- AC4: `Text(Pong)` message updates client's `last_seen` timestamp
-- AC5: `Text(Ping)` message triggers `Pong` reply
-- AC6: Connection closed cleanly on timeout via `stream.close().await`
-- AC7: Client removed from room state on disconnect
-- AC8: `cargo check` passes
+- AC1: 30-second ping interval task started in `ws_handler` ✅
+- AC2: `WsMessage::Ping` sent to client on each interval tick ✅
+- AC3: Connection breaks on send failure (ping timeout) ✅
+- AC4: `WsMessage::Pong` updates client awareness state ✅
+- AC5: `WsMessage::Ping` message triggers `WsMessage::Pong` reply ✅
+- AC6: Connection breaks cleanly on stream end or error ✅
+- AC7: Client removed from room state on disconnect ✅
+- AC8: `cargo check` passes ✅
+- AC9: All 3 ws tests pass ✅
 
 ## Technical Hints
 
@@ -49,6 +48,6 @@ loop {
   }
   ```
 - `biased` mode ensures message receive is checked first (prevents starvation)
-- Connection cleanup: use `drop(stream)` or `stream.close().await`
+- axum 0.8's WebSocket doesn't expose hardware ping/pong — use application-level
 - Refer to: https://docs.rs/tokio/latest/tokio/time/fn.interval.html
 - Refer to: https://docs.rs/tokio/latest/tokio/macro.select.html

@@ -1,6 +1,6 @@
 # P2-T02 — Room State Manager
 
-**Status:** TODO
+**Status:** Done
 
 ## Goal
 
