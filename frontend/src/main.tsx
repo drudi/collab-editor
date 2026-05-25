@@ -5,7 +5,11 @@ import { AuthProvider } from './contexts/AuthContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { App } from './App';
 
-createRoot(document.getElementById('root')!).render(
+console.log('=== React mounting ===');
+console.log('root element:', document.getElementById('root'));
+
+const root = createRoot(document.getElementById('root')!);
+root.render(
   <StrictMode>
     <AuthProvider>
       <ErrorBoundary>

@@ -17,10 +17,11 @@
  * ```
  */
 
-import { EditorState, Extension } from '@codemirror/state';
-import { linter, Diagnostic } from '@codemirror/lint';
-import { EditorView } from '@codemirror/view';
-import { WsMessage } from '../hooks/useWebSocket';
+import type { EditorState } from '@codemirror/state';
+import type { Extension } from '@codemirror/state';
+import type { Diagnostic } from '@codemirror/lint';
+import { linter } from '@codemirror/lint';
+import type { WsMessage } from '../hooks/useWebSocket';
 
 /**
  * Convert an LSP diagnostic severity code to a CodeMirror severity string.
@@ -72,7 +73,7 @@ export function lspDiagnosticToCodeMirror(
   diagnostic: LspDiagnostic,
   state: EditorState,
 ): Diagnostic {
-  const lineObj = state.doc.getLine(diagnostic.line + 1);
+  const lineObj = state.doc.line(diagnostic.line + 1);
   const from = lineObj.from + diagnostic.column - 1;
   const to = lineObj.from + diagnostic.column - 1;
 
@@ -111,7 +112,7 @@ export interface LspDiagnostic {
  * @returns Array of CodeMirror Diagnostic objects
  */
 export function lintMessageToDiagnostics(
-  message: WsMessage,
+  message: { type: 'lint'; diagnostics: LspDiagnostic[] },
   state: EditorState,
 ): Diagnostic[] {
   if (message.type !== 'lint') {
@@ -143,15 +144,17 @@ export function lintMessageToDiagnostics(
 export function createLinter(
   onDiagnostics: (diagnostics: Diagnostic[]) => void,
 ): Extension {
-  return linter((view) => {
+  const latestDiagnostics: Diagnostic[] = [];
+
+  return linter((_view) => {
     // The linter function returns diagnostics for the current view state.
     // However, our diagnostics come from the WebSocket (external source),
     // not from analyzing the current document.
     // We store the latest diagnostics in a closure and return them here.
     // This is a simplified approach — in production, you'd use a proper
     // lint state management system.
-    const diagnostics = onDiagnostics([]);
-    return diagnostics;
+    onDiagnostics(latestDiagnostics);
+    return latestDiagnostics;
   });
 }
 

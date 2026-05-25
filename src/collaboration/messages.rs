@@ -11,12 +11,13 @@
 //! - `Pong` — health check pong
 
 use serde::{Deserialize, Serialize};
+use utoipa::ToSchema;
 
 /// WebSocket message types sent between server and clients.
 ///
 /// All variants are serialized as JSON with a `type` discriminator field.
 /// Binary data (Sync, Awareness) is stored as an array of bytes.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 #[serde(tag = "type")]
 pub enum WsMessage {
     /// Yjs document update (binary encoded as array of bytes).
@@ -62,7 +63,7 @@ pub enum WsMessage {
 }
 
 /// LSP diagnostic severity level.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "lowercase")]
 pub enum LspDiagnosticSeverity {
     /// Error: critical issues that prevent compilation/run.
@@ -76,7 +77,7 @@ pub enum LspDiagnosticSeverity {
 }
 
 /// A single diagnostic from an LSP server.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema)]
 pub struct LspDiagnostic {
     /// Line number (0-indexed).
     pub line: i32,
@@ -97,14 +98,14 @@ pub struct LspDiagnostic {
 }
 
 /// Cursor position in the document.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 pub struct CursorPos {
     pub line: i32,
     pub ch: i32,
 }
 
 /// Text selection range.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 pub struct SelectionRange {
     pub from: CursorPos,
     pub to: CursorPos,

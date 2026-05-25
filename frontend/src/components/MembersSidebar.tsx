@@ -57,7 +57,7 @@ interface RoomMetadata {
 /**
  * Individual member row with avatar dot, username, and role badge.
  */
-export function MemberItem({ username, role, isOnline, color }: MemberItemProps): JSX.Element {
+export function MemberItem({ username, role, isOnline, color }: MemberItemProps): React.JSX.Element {
   return (
     <div className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-800/50 transition-colors">
       {/* Colored status dot */}
@@ -82,7 +82,7 @@ export function MemberItem({ username, role, isOnline, color }: MemberItemProps)
 /**
  * Scrollable list of online members.
  */
-export function MembersList({ members }: MembersListProps): JSX.Element {
+export function MembersList({ members }: MembersListProps): React.JSX.Element {
   return (
     <div className="flex-1 overflow-y-auto space-y-1">
       {members.map((member, index) => (
@@ -102,7 +102,7 @@ export function MembersList({ members }: MembersListProps): JSX.Element {
 /**
  * Button to disconnect from the room and navigate home.
  */
-export function LeaveRoomButton({ onLeave }: LeaveRoomButtonProps): JSX.Element {
+export function LeaveRoomButton({ onLeave }: LeaveRoomButtonProps): React.JSX.Element {
   const navigate = useNavigate();
 
   const handleLeave = () => {
@@ -128,7 +128,7 @@ export function LeaveRoomButton({ onLeave }: LeaveRoomButtonProps): JSX.Element 
  * Placeholder form for future member management.
  * UI only — no backend integration yet.
  */
-export function AddMemberForm({ onAdd }: AddMemberFormProps): JSX.Element {
+export function AddMemberForm({ onAdd }: AddMemberFormProps): React.JSX.Element {
   const [username, setUsername] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -173,16 +173,16 @@ interface MembersSidebarProps {
  * - Leave Room button
  * - Add Member form (placeholder)
  */
-export function MembersSidebar({ roomMetadata }: MembersSidebarProps): JSX.Element {
+export function MembersSidebar({ roomMetadata }: MembersSidebarProps): React.JSX.Element {
   const navigate = useNavigate();
-  const [isOnline, setIsOnline] = useState(true);
+  const [isOnline] = useState(true);
 
   // Get room members with online status
   const members = roomMetadata
     ? roomMetadata.members.map((m) => ({
         username: m.username,
         role: m.member_type,
-        isOnline: isOnline,
+        isOnline,
         color: '#6366f1',
       }))
     : [];

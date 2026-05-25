@@ -20,14 +20,14 @@ use crate::error::{AppError, RoomErrorKind};
 use crate::models::User;
 
 /// Request body for the registration endpoint.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, utoipa::ToSchema)]
 pub struct RegisterRequest {
     pub username: String,
     pub password: String,
 }
 
 /// Response body returned on successful registration.
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, utoipa::ToSchema)]
 pub struct RegisterResponse {
     pub id: i64,
     pub username: String,

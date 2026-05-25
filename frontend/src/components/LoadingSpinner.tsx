@@ -33,7 +33,7 @@ export function LoadingSpinner({
   label,
   color = 'indigo',
   size = 2,
-}: LoadingSpinnerProps): JSX.Element {
+}: LoadingSpinnerProps): React.JSX.Element {
   const borderClass = COLOR_MAP[color] || COLOR_MAP.indigo;
   const spinnerClass = SIZE_MAP[size] || SIZE_MAP[2];
 

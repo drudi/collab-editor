@@ -7,11 +7,13 @@
  * Logs error to console for debugging.
  */
 
-import { Component, ErrorInfo, ReactNode } from 'react';
+import type { ErrorInfo } from 'react';
+import { Component, type ReactNode } from 'react';
 
 interface Props {
   children: ReactNode;
   fallback?: ReactNode;
+  targetName?: string;
 }
 
 interface State {
@@ -61,7 +63,7 @@ export class ErrorBoundary extends Component<Props, State> {
             </p>
 
             {/* Stack trace for debugging (collapsible) */}
-            {process.env.NODE_ENV === 'development' && this.state.error?.stack && (
+            {(import.meta.env.DEV as boolean) && this.state.error?.stack && (
               <details className="mb-4 text-left">
                 <summary className="text-xs text-gray-500 cursor-pointer hover:text-gray-400">
                   View error details

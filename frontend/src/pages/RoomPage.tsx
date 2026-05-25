@@ -17,7 +17,7 @@
  * ```
  */
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 
 import { useWebSocket } from '../hooks/useWebSocket';
@@ -27,8 +27,9 @@ import { createCmYjsBinding } from '../collab/cm-yjs-binding';
 import { getLanguageExtension, getLanguageName, getDefaultLanguage, getSupportedLanguages } from '../collab/languages';
 import { CursorRenderer } from '../collab/cursor-renderer';
 import { MembersSidebar } from '../components/MembersSidebar';
-import { AutoSaveIndicator, SaveStatus } from '../components/AutoSaveIndicator';
+import { AutoSaveIndicator, type SaveStatus } from '../components/AutoSaveIndicator';
 import { LoadingSpinner } from '../components/LoadingSpinner';
+import * as Y from 'yjs';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -51,9 +52,10 @@ interface RoomMetadata {
 
 // ─── Component ──────────────────────────────────────────────────────────────
 
-export function RoomPage(): JSX.Element {
+export function RoomPage(): React.JSX.Element {
   const { id: roomId } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  void navigate; // Used in the unused handleLeave callback
 
   // Refs
   const editorContainerRef = useRef<HTMLDivElement>(null);
@@ -68,14 +70,21 @@ export function RoomPage(): JSX.Element {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('unsaved');
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [_hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [isEditorFocused, setIsEditorFocused] = useState(false);
+
+  // Yjs hook — manages the CRDT document
+  const yjsResult = useYjs(roomId || '', (msg) => {
+    if (typeof msg === 'string') {
+      sendMessage(msg);
+    }
+  });
 
   // WebSocket hook — manages the connection to the room
   const { sendMessage, reconnect, isConnected } = useWebSocket(roomId || '', {
     onSyncUpdate: (update) => {
-      if (yjsResult) {
+      if (yjsResult.doc) {
         Y.applyUpdate(yjsResult.doc, update);
       }
     },
@@ -83,10 +92,7 @@ export function RoomPage(): JSX.Element {
       setAwarenessState(data as Record<string, unknown> | null);
     },
   });
-
-  // Yjs hook — manages the CRDT document
-  const yjsResult = useYjs(roomId || '', sendMessage);
-  const { ytext, doc, awareness } = yjsResult;
+  const { ytext, doc } = yjsResult;
 
   // Load room metadata
   useEffect(() => {
@@ -95,7 +101,9 @@ export function RoomPage(): JSX.Element {
     setIsLoading(true);
     setError(null);
 
-    fetch(`/api/rooms/${roomId}`)
+    fetch(`/api/rooms/${roomId}/metadata`, {
+      credentials: 'include',
+    })
       .then((res) => {
         if (!res.ok) {
           throw new Error(`Failed to load room: ${res.status}`);
@@ -150,8 +158,8 @@ export function RoomPage(): JSX.Element {
   const handleSave = () => {
     setSaveStatus('saving');
     // Force a full sync — send awareness state as a sync message
-    const syncMsg = { type: 'sync' as const, data: new Uint8Array() };
-    sendMessage(JSON.stringify(syncMsg));
+    const syncMsg = { type: 'sync' as const, data: [] as number[] };
+    sendMessage(syncMsg);
     // Simulate server confirmation after a short delay
     setTimeout(() => {
       setSaveStatus('saved');
@@ -164,6 +172,8 @@ export function RoomPage(): JSX.Element {
     setToast(message);
     setTimeout(() => setToast(null), 1500);
   }, []);
+
+
 
   // Send cursor position updates
   useEffect(() => {
@@ -180,7 +190,7 @@ export function RoomPage(): JSX.Element {
           },
           selection: detail.selection,
         };
-        sendMessage(JSON.stringify(cursorMsg));
+        sendMessage(cursorMsg);
       }
     };
 

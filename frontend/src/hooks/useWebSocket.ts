@@ -84,14 +84,13 @@ export interface UseWebSocketOptions {
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
 /** Convert a number array to Uint8Array for Yjs. */
-function arrayToUint8(data: number[]): Uint8Array {
+/** Convert a number array to Uint8Array for Yjs. */
+function numberArrayToUint8(data: number[]): Uint8Array {
   return new Uint8Array(data);
 }
 
 /** Convert a Uint8Array to a number array for JSON serialization. */
-function uint8ToArray(data: Uint8Array): number[] {
-  return Array.from(data);
-}
+
 
 /**
  * Encode a message for sending over the WebSocket.
@@ -99,10 +98,12 @@ function uint8ToArray(data: Uint8Array): number[] {
  */
 function encodeMessage(msg: WsMessage): string {
   if (msg.type === 'sync') {
-    return JSON.stringify({ type: 'sync', data: uint8ToArray(msg.data) });
+    const syncMsg = msg as SyncMessage;
+    return JSON.stringify({ type: 'sync', data: syncMsg.data });
   }
   if (msg.type === 'awareness') {
-    return JSON.stringify({ type: 'awareness', data: uint8ToArray(msg.data) });
+    const awMsg = msg as AwarenessMessage;
+    return JSON.stringify({ type: 'awareness', data: awMsg.data });
   }
   return JSON.stringify(msg);
 }
@@ -236,7 +237,7 @@ export function useWebSocket(
 
       // Handle sync updates from server (binary data encoded as number array)
       if (parsed.type === 'sync' && 'data' in parsed && Array.isArray(parsed.data)) {
-        const updateData = arrayToUint8(parsed.data);
+        const updateData = numberArrayToUint8(parsed.data as number[]);
         if (onSyncUpdateRef.current) {
           try {
             onSyncUpdateRef.current(updateData);
@@ -248,7 +249,7 @@ export function useWebSocket(
 
       // Handle awareness updates from server
       if (parsed.type === 'awareness' && 'data' in parsed && Array.isArray(parsed.data)) {
-        const awarenessData = arrayToUint8(parsed.data);
+        const awarenessData = numberArrayToUint8(parsed.data as number[]);
         try {
           const decoded = new TextDecoder().decode(awarenessData);
           const parsedAwareness = JSON.parse(decoded);

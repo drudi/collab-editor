@@ -2,16 +2,18 @@
 //!
 //! Core data types used across HTTP handlers, database queries, and
 //! WebSocket messages. All structs derive `Serialize` and `Deserialize`
-//! for JSON interchange.
+//! for JSON interchange. Schema types are annotated with `ToSchema`
+//! for OpenAPI documentation via utoipa.
 
 use std::fmt;
 use std::str::FromStr;
 
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
+use utoipa::ToSchema;
 
 /// Supported programming languages for editor syntax highlighting.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, ToSchema)]
 #[serde(rename_all = "lowercase")]
 pub enum Language {
     Javascript,
@@ -50,7 +52,7 @@ impl FromStr for Language {
 }
 
 /// An application user.
-#[derive(Debug, Clone, Serialize, Deserialize, sqlx::FromRow)]
+#[derive(Debug, Clone, Serialize, Deserialize, sqlx::FromRow, ToSchema)]
 pub struct User {
     pub id: i64,
     pub username: String,
@@ -60,7 +62,7 @@ pub struct User {
 }
 
 /// API-safe user representation (excludes `password_hash`).
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct UserResponse {
     pub id: i64,
     pub username: String,
@@ -113,7 +115,7 @@ pub struct RoomMetadataResponse {
 }
 
 /// Membership type within a room.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, ToSchema)]
 #[serde(rename_all = "lowercase")]
 pub enum RoomMemberType {
     Owner,
@@ -145,7 +147,7 @@ impl std::str::FromStr for RoomMemberType {
 }
 
 /// A user's membership in a room.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct RoomMember {
     pub id: i64,
     pub room_id: i64,
@@ -156,7 +158,7 @@ pub struct RoomMember {
 }
 
 /// A snapshot of a room's document content.
-#[derive(Debug, Clone, Serialize, Deserialize, sqlx::FromRow)]
+#[derive(Debug, Clone, Serialize, Deserialize, sqlx::FromRow, ToSchema)]
 pub struct Document {
     pub id: i64,
     pub room_id: i64,

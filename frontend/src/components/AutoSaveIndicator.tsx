@@ -18,7 +18,7 @@ interface AutoSaveIndicatorProps {
   status: SaveStatus;
 }
 
-export function AutoSaveIndicator({ status }: AutoSaveIndicatorProps): JSX.Element {
+export function AutoSaveIndicator({ status }: AutoSaveIndicatorProps): React.JSX.Element {
   const [autoFaded, setAutoFaded] = useState(false);
 
   // When status is 'saved', schedule auto-fade back after 2 seconds (P4-T02, AC6)

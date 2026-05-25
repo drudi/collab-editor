@@ -11,7 +11,7 @@ use axum::{
 use serde::{Deserialize, Serialize};
 use sqlx::SqlitePool;
 
-use crate::auth::session::ValidSession;
+use crate::auth::session::{OptionalSession, ValidSession};
 use crate::db;
 use crate::error::{AppError, RoomErrorKind};
 use crate::models::{Language, UserResponse};
@@ -19,12 +19,13 @@ use crate::models::{Language, UserResponse};
 // ─── Request / Response Types ───────────────────────────────────────────
 
 /// Response body for GET /api/rooms/:id/metadata (P4-T03, AC1-AC2).
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, utoipa::ToSchema)]
 pub struct RoomMetadataDetail {
     pub id: i64,
     pub code: String,
     pub name: String,
     pub description: Option<String>,
+    #[schema(example = "javascript", nullable)]
     pub language: Option<String>,
     pub owner: UserResponse,
     pub members: Vec<RoomMemberDetail>,
@@ -33,15 +34,16 @@ pub struct RoomMetadataDetail {
 }
 
 /// Simplified member representation for the metadata response.
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, utoipa::ToSchema)]
 pub struct RoomMemberDetail {
     pub id: i64,
     pub username: String,
+    #[schema(example = "editor")]
     pub member_type: String,
 }
 
 /// Request body for PATCH /api/rooms/:id (P4-T03, AC3-AC6).
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, utoipa::ToSchema)]
 #[serde(deny_unknown_fields)]
 pub struct UpdateRoomRequest {
     #[serde(default)]
@@ -54,17 +56,24 @@ pub struct UpdateRoomRequest {
 
 // ─── Handlers ───────────────────────────────────────────────────────────
 
-/// GET /api/rooms/:id/metadata — detailed room metadata (P4-T03, AC1-AC2).
+/// GET /api/rooms/:code/metadata — detailed room metadata (P4-T03, AC1-AC2).
 ///
 /// Returns full metadata including version and lastSavedAt from the latest document.
 pub async fn get_metadata_handler(
-    Path(room_id): Path<i64>,
+    Path(room_code): Path<String>,
     State(pool): State<SqlitePool>,
+    OptionalSession(user): OptionalSession,
 ) -> Result<Json<RoomMetadataDetail>, AppError> {
-    // Fetch room
-    let room = db::queries::get_room_by_id(&pool, room_id)
+    // Auth check
+    let _user = user.ok_or_else(|| {
+        AppError::AuthError("Authentication required".into())
+    })?;
+
+    // Fetch room by code
+    let room = db::queries::get_room_by_code(&pool, &room_code)
         .await?
         .ok_or_else(|| AppError::RoomError(RoomErrorKind::NotFound, "Room not found".into()))?;
+    let room_id = room.id;
 
     // Fetch owner
     let owner = db::queries::get_user_by_id(&pool, room.owner_id)
@@ -73,7 +82,7 @@ pub async fn get_metadata_handler(
     let owner_response = UserResponse::from(owner);
 
     // Fetch members as simplified detail
-    let members_raw = db::queries::get_room_members_with_user(&pool, room_id).await?;
+    let members_raw = db::queries::get_room_members_with_user(&pool, room.id).await?;
     let members: Vec<RoomMemberDetail> = members_raw
         .into_iter()
         .map(|m| RoomMemberDetail {
@@ -102,19 +111,20 @@ pub async fn get_metadata_handler(
     }))
 }
 
-/// PATCH /api/rooms/:id — edit room properties (P4-T03, AC3-AC10).
+/// PATCH /api/rooms/:code — edit room properties (P4-T03, AC3-AC10).
 ///
 /// Only the room owner can edit. Validates language against the Language enum.
 pub async fn update_room_handler(
-    Path(room_id): Path<i64>,
+    Path(room_code): Path<String>,
     State(pool): State<SqlitePool>,
     session: ValidSession,
     Json(req): Json<UpdateRoomRequest>,
 ) -> Result<Json<RoomMetadataDetail>, AppError> {
-    // Fetch room
-    let room = db::queries::get_room_by_id(&pool, room_id)
+    // Fetch room by code
+    let room = db::queries::get_room_by_code(&pool, &room_code)
         .await?
         .ok_or_else(|| AppError::RoomError(RoomErrorKind::NotFound, "Room not found".into()))?;
+    let room_id = room.id;
 
     // Owner authorization check (P4-T03, AC4/AC7)
     if room.owner_id != session.0.id {

@@ -11,7 +11,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 
-// ─── Types ───────────────────────────────────────────────────────────────
+// ─── Types ───────────────────────────────────────────────────────
 
 export type SettingsTab = 'account' | 'editor' | 'notifications';
 
@@ -49,7 +49,7 @@ const DEFAULT_SETTINGS: AppSettings = {
 
 const STORAGE_KEY = 'collab-editor-settings';
 
-// ─── Settings Hook ──────────────────────────────────────────────────────
+// ─── Settings Hook ──────────────────────────────────────────────
 
 function useAppSettings(): [AppSettings, (updates: Partial<AppSettings>) => void] {
   const [settings, setSettings] = useState<AppSettings>(() => {
@@ -95,18 +95,32 @@ function useAppSettings(): [AppSettings, (updates: Partial<AppSettings>) => void
   }, [settings.editor.fontSize, settings.editor.theme]);
 
   const updateSettings = useCallback((updates: Partial<AppSettings>) => {
-    setSettings((prev) => ({
-      ...prev,
-      editor: { ...prev.editor, ...updates.editor },
-      account: { ...prev.account, ...updates.account },
-      notifications: { ...prev.notifications, ...updates.notifications },
-    }));
+    setSettings((prev) => {
+      const prevEditor = prev.editor;
+      const editorUpdates = updates.editor;
+      let newEditor: EditorSettings;
+      if (editorUpdates) {
+        newEditor = {
+          fontSize: editorUpdates.fontSize ?? prevEditor.fontSize,
+          tabWidth: editorUpdates.tabWidth ?? prevEditor.tabWidth,
+          theme: editorUpdates.theme ?? prevEditor.theme,
+        };
+      } else {
+        newEditor = prevEditor;
+      }
+      return {
+        ...prev,
+        editor: newEditor,
+        account: { ...prev.account, ...updates.account },
+        notifications: { ...prev.notifications, ...updates.notifications },
+      };
+    });
   }, []);
 
   return [settings, updateSettings];
 }
 
-// ─── Account Tab ────────────────────────────────────────────────────────
+// ─── Account Tab ────────────────────────────────────────────────
 
 interface AccountTabProps {
   username: string;
@@ -118,7 +132,7 @@ function AccountTab({
   username,
   onChangePassword,
   onDeleteAccount,
-}: AccountTabProps): JSX.Element {
+}: AccountTabProps): React.JSX.Element {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -247,14 +261,14 @@ function AccountTab({
   );
 }
 
-// ─── Editor Tab ─────────────────────────────────────────────────────────
+// ─── Editor Tab ─────────────────────────────────────────────────
 
 interface EditorTabProps {
   settings: EditorSettings;
   onUpdate: (updates: Partial<EditorSettings>) => void;
 }
 
-function EditorTab({ settings, onUpdate }: EditorTabProps): JSX.Element {
+function EditorTab({ settings, onUpdate }: EditorTabProps): React.JSX.Element {
   return (
     <div className="space-y-6 max-w-lg">
       <h3 className="text-lg font-semibold text-gray-200">Editor</h3>
@@ -328,9 +342,9 @@ function EditorTab({ settings, onUpdate }: EditorTabProps): JSX.Element {
   );
 }
 
-// ─── Notifications Tab ──────────────────────────────────────────────────
+// ─── Notifications Tab ──────────────────────────────────────────
 
-function NotificationsTab(): JSX.Element {
+function NotificationsTab(): React.JSX.Element {
   return (
     <div className="flex flex-col items-center justify-center max-w-md py-16 text-center">
       <div className="text-4xl mb-4 opacity-50">🔔</div>
@@ -342,9 +356,9 @@ function NotificationsTab(): JSX.Element {
   );
 }
 
-// ─── Settings Page Component ────────────────────────────────────────────
+// ─── Settings Page Component ────────────────────────────────────
 
-interface SettingsPageProps {
+export interface SettingsPageProps {
   username: string;
   onChangePassword: (current: string, newPass: string) => Promise<boolean>;
   onDeleteAccount: () => Promise<boolean>;
@@ -356,7 +370,7 @@ export function SettingsPage({
   onChangePassword,
   onDeleteAccount,
   onNavigateHome,
-}: SettingsPageProps): JSX.Element {
+}: SettingsPageProps): React.JSX.Element {
   const [activeTab, setActiveTab] = useState<SettingsTab>('account');
   const [settings, updateSettings] = useAppSettings();
 
@@ -412,7 +426,9 @@ export function SettingsPage({
         {activeTab === 'editor' && (
           <EditorTab
             settings={settings.editor}
-            onUpdate={(updates) => updateSettings({ editor: updates })}
+            onUpdate={(updates) => {
+              updateSettings({ editor: { ...updates } as EditorSettings });
+            }}
           />
         )}
         {activeTab === 'notifications' && <NotificationsTab />}

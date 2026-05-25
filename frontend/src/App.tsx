@@ -32,7 +32,12 @@ export function App() {
           path="/settings"
           element={
             <ProtectedRoute>
-              <SettingsPage />
+              <SettingsPage
+                username=""
+                onChangePassword={async () => false}
+                onDeleteAccount={async () => false}
+                onNavigateHome={() => {}}
+              />
             </ProtectedRoute>
           }
         />

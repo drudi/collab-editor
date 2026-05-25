@@ -11,13 +11,12 @@
  * Handles cursor position preservation during remote updates.
  */
 
+import type { Extension } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
-import { Extension } from '@codemirror/state';
 import * as Y from 'yjs';
 
 // Origin markers for change classification
 const LOCAL_ORIGIN = 'local';
-const REMOTE_ORIGIN = 'remote';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -69,7 +68,7 @@ export function createCmYjsBinding(
       EditorView.editable.of(true),
 
       // Detect local changes and sync to YText
-      EditorView.updateListener.of((update) => {
+      EditorView.updateListener.of((update: { docChanged: boolean; state: { doc: { toString: () => string } } }) => {
         if (!update.docChanged) return;
 
         const newContent = update.state.doc.toString();
@@ -78,7 +77,7 @@ export function createCmYjsBinding(
         // If content differs from YText, this is a local change
         if (yContent !== newContent) {
           // Apply to YText with 'local' origin marker
-          ytext.transact(() => {
+          ytext.doc?.transact(() => {
             ytext.delete(0, yContent.length);
             ytext.insert(0, newContent);
           }, LOCAL_ORIGIN);

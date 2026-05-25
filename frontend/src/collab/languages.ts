@@ -10,8 +10,8 @@
  * - Plain text (no highlighting)
  */
 
-import { Extension } from '@codemirror/state';
-import { javascript, TypeScript } from '@codemirror/lang-javascript';
+import type { Extension } from '@codemirror/state';
+import { javascript, typescriptLanguage } from '@codemirror/lang-javascript';
 import { python } from '@codemirror/lang-python';
 import { rust } from '@codemirror/lang-rust';
 
@@ -26,11 +26,11 @@ export function getLanguageExtension(language: string): Extension[] {
     case 'javascript':
       return [javascript()];
     case 'typescript':
-      return [TypeScript()];
+      return [typescriptLanguage] as Extension[];
     case 'python':
-      return [python()];
+      return [python()] as Extension[];
     case 'rust':
-      return [rust()];
+      return [rust()] as Extension[];
     default:
       return [];
   }
@@ -97,12 +97,12 @@ export function getSupportedLanguages(): { id: string; name: string }[] {
  *
  * Dynamically switches the language of the editor.
  *
- * @param view - The CodeMirror EditorView.
- * @param newLanguage - The new language identifier.
+ * @param _view - The CodeMirror EditorView.
+ * @param _newLanguage - The new language identifier.
  * @returns true if the language was updated.
  */
-export function updateLanguage(view: any, newLanguage: string): boolean {
-  const ext = getLanguageExtension(newLanguage);
+export function updateLanguage(_view: any, _newLanguage: string): boolean {
+  const ext = getLanguageExtension(_newLanguage);
   if (ext.length === 0) return false;
 
   // The extensions are passed to EditorView at construction time.

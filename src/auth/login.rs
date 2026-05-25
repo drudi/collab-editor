@@ -21,14 +21,14 @@ use crate::error::AppError;
 use crate::models::User;
 
 /// Request body for the login endpoint.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, utoipa::ToSchema)]
 pub struct LoginRequest {
     pub username: String,
     pub password: String,
 }
 
 /// Response body returned on successful login.
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, utoipa::ToSchema)]
 pub struct LoginResponse {
     pub id: i64,
     pub username: String,

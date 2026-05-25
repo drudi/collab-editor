@@ -99,14 +99,62 @@ pub fn session_cookie_string(token: &str) -> String {
     )
 }
 
-/// GET /api/auth/me — Returns the authenticated user's profile.
+/// Optional session extractor — returns `None` for unauthenticated requests instead of rejecting.
+#[derive(Debug, Clone)]
+pub struct OptionalSession(pub Option<User>);
+
+impl FromRequestParts<SqlitePool> for OptionalSession {
+    type Rejection = ();
+
+    async fn from_request_parts(
+        req: &mut Parts,
+        pool: &SqlitePool,
+    ) -> Result<Self, Self::Rejection> {
+        // Read the Cookie header and find the `session` token
+        let cookie_str = req
+            .headers
+            .get(axum::http::header::COOKIE)
+            .and_then(|v| v.to_str().ok())
+            .unwrap_or("");
+
+        let session_token = extract_cookie_value(cookie_str, "session");
+
+        let user = if let Some(token) = session_token {
+            let session = db::queries::get_session_by_token(pool, &token)
+                .await
+                .ok()
+                .flatten();
+
+            if let Some(session) = session {
+                let now = chrono::Utc::now().naive_utc();
+                if session.expires_at >= now {
+                    db::queries::get_user_by_id(pool, session.user_id)
+                        .await
+                        .ok()
+                        .flatten()
+                } else {
+                    None
+                }
+            } else {
+                None
+            }
+        } else {
+            None
+        };
+
+        Ok(OptionalSession(user))
+    }
+}
+
+/// GET /api/auth/me — Returns the authenticated user's profile, or 200 OK with null.
 ///
-/// Serves as an example of how to wire `ValidSession` as an extractor
-/// in a handler. All protected routes follow the same pattern.
+/// Unlike other protected routes that reject unauthenticated requests with 401,
+/// this endpoint returns HTTP 200 with `null` for unauthenticated users so the
+/// frontend can distinguish between "not logged in" and "server error".
 pub async fn me_handler(
-    ValidSession(user): ValidSession,
-) -> Result<axum::Json<crate::models::UserResponse>, AppError> {
-    Ok(axum::Json(crate::models::UserResponse::from(user)))
+    OptionalSession(user): OptionalSession,
+) -> axum::Json<Option<crate::models::UserResponse>> {
+    axum::Json(user.map(crate::models::UserResponse::from))
 }
 
 #[cfg(test)]

@@ -1,4 +1,4 @@
-//! Room metadata handler — GET /api/rooms/:id
+//! Room metadata handler — GET /api/rooms/:code
 //!
 //! Returns full metadata about a room including owner info, member list,
 //! and latest document snapshot.
@@ -8,6 +8,7 @@ use axum::{
     Json,
 };
 use serde::Serialize;
+use utoipa::ToSchema;
 use sqlx::SqlitePool;
 
 use crate::db;
@@ -15,7 +16,7 @@ use crate::error::{AppError, RoomErrorKind};
 use crate::models::{RoomMember, User, UserResponse};
 
 /// Response body for the room metadata endpoint.
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, ToSchema)]
 pub struct RoomMetadataResponse {
     pub id: i64,
     pub code: String,
@@ -27,15 +28,16 @@ pub struct RoomMetadataResponse {
     pub latest_document_snapshot: Option<crate::models::Document>,
 }
 
-/// GET /api/rooms/:id
+/// GET /api/rooms/:code
 ///
-/// Returns full metadata about a room. Returns 404 if the room doesn't exist.
+/// Returns full metadata about a room by its code (e.g. "abc123").
+/// Returns 404 if the room doesn't exist.
 pub async fn get_room_handler(
-    Path(room_id): Path<i64>,
+    Path(room_code): Path<String>,
     State(pool): State<SqlitePool>,
 ) -> Result<Json<RoomMetadataResponse>, AppError> {
-    // ── Fetch room ──────────────────────────────────────────────
-    let room = db::queries::get_room_by_id(&pool, room_id)
+    // ── Fetch room by code ──────────────────────────────────────
+    let room = db::queries::get_room_by_code(&pool, &room_code)
         .await?
         .ok_or_else(|| AppError::RoomError(RoomErrorKind::NotFound, "Room not found".into()))?;
 
@@ -47,7 +49,7 @@ pub async fn get_room_handler(
     let owner_response = UserResponse::from(owner);
 
     // ── Fetch members with full user data ───────────────────────
-    let members_raw = db::queries::get_room_members_with_user(&pool, room_id).await?;
+    let members_raw = db::queries::get_room_members_with_user(&pool, room.id).await?;
 
     let members: Vec<RoomMember> = members_raw
         .into_iter()
@@ -67,7 +69,7 @@ pub async fn get_room_handler(
         .collect();
 
     // ── Fetch latest document snapshot ──────────────────────────
-    let latest_doc = db::queries::get_latest_document(&pool, room_id).await?;
+    let latest_doc = db::queries::get_latest_document(&pool, room.id).await?;
 
     Ok(Json(RoomMetadataResponse {
         id: room.id,
@@ -79,4 +81,16 @@ pub async fn get_room_handler(
         members,
         latest_document_snapshot: latest_doc,
     }))
+}
+
+/// GET /api/rooms/{id} — redirect to /api/rooms/:code (backwards compat)
+pub async fn get_room_by_id_handler(
+    Path(_room_id): Path<i64>,
+) -> Result<axum::http::Response<axum::body::Body>, AppError> {
+    // Return 404 — this route exists only for backwards compatibility
+    // but rooms are now accessed by code, not by ID
+    Err(AppError::RoomError(
+        RoomErrorKind::NotFound,
+        "Rooms are now accessed by code. Use GET /api/rooms/:code instead.".into(),
+    ))
 }

@@ -12,7 +12,7 @@
  * Tailwind-styled with dark mode support.
  */
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -41,47 +41,6 @@ export interface CursorRendererProps {
 }
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
-
-/**
- * Convert CodeMirror {line, ch} to pixel coordinates.
- *
- * Uses CodeMirror's posToDOM API to get the DOM position of a document offset.
- */
-function posToPixels(
-  view: any,
-  line: number,
-  ch: number,
-): { left: number; top: number } | null {
-  try {
-    const resolved = view.state.doc.resolve(line + 1);
-    const pos = resolved.before(ch);
-    const dom = view.posToDOM(pos);
-
-    if (!dom) return null;
-
-    // Handle different DOM element types
-    if ('offsetLeft' in dom) {
-      // HTMLElement
-      return {
-        left: dom.offsetLeft,
-        top: dom.offsetTop + dom.offsetHeight,
-      };
-    }
-
-    if ('getBoundingClientRect' in dom) {
-      // SVGElement or SVGRect
-      const rect = (dom as SVGSVGElement).getBoundingClientRect();
-      return {
-        left: rect.left,
-        top: rect.top + rect.height,
-      };
-    }
-
-    return null;
-  } catch {
-    return null;
-  }
-}
 
 /**
  * Parse awareness state data to extract remote cursors.
@@ -144,7 +103,7 @@ function parseAwarenessState(
  * Positioned absolutely within the editor container using pixel coordinates
  * derived from CodeMirror's position API.
  */
-function RemoteCursorOverlay({ cursor }: { cursor: RemoteCursor }): JSX.Element {
+function RemoteCursorOverlay({ cursor }: { cursor: RemoteCursor }): React.JSX.Element {
   return (
     <div
       className="absolute pointer-events-none"
@@ -182,7 +141,7 @@ export function CursorRenderer({
   containerRef,
   awarenessState,
   localUserId = 0,
-}: CursorRendererProps): JSX.Element | null {
+}: CursorRendererProps): React.JSX.Element | null {
   const [, setTick] = useState(0);
 
   // Parse awareness state to get remote cursors
@@ -193,9 +152,8 @@ export function CursorRenderer({
     if (!editorViewRef.current || !containerRef.current || cursors.length === 0)
       return;
 
-    const view = editorViewRef.current;
     const containerEl = containerRef.current;
-    if (!view || !containerEl) return;
+    if (!containerEl) return;
 
     const interval = setInterval(() => {
       // Force re-render to update positions

@@ -201,6 +201,29 @@ pub async fn get_room_by_id(
     .await
 }
 
+/// Fetch room by code. Returns `None` if room doesn't exist.
+pub async fn get_room_by_code(
+    pool: &SqlitePool,
+    room_code: &str,
+) -> Result<Option<Room>, sqlx::Error> {
+    query!(
+        r#"SELECT id, code, name, description, language, owner_id, created_at
+            FROM rooms WHERE code = $1"#,
+        room_code,
+    )
+    .map(|row| Room {
+        id: row.id.unwrap(),
+        code: row.code,
+        name: row.name,
+        description: row.description,
+        language: row.language.as_deref().map(|s| s.parse()).transpose().expect("language parse failed"),
+        owner_id: row.owner_id,
+        created_at: row.created_at.expect("created_at has DEFAULT"),
+    })
+    .fetch_optional(pool)
+    .await
+}
+
 /// Add a user as a member of a room.
 pub async fn add_room_member(
     pool: &SqlitePool,
@@ -341,7 +364,7 @@ pub async fn get_latest_document(
         room_id,
     )
     .map(|row| Document {
-        id: row.id,
+        id: row.id.unwrap(),
         room_id: row.room_id,
         content_snapshot: row.content_snapshot.unwrap_or_default(),
         version: row.version.expect("version has DEFAULT 0") as i32,

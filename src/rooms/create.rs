@@ -14,6 +14,7 @@ use rand::distr::Alphanumeric;
 use rand::rng;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
+
 use sqlx::SqlitePool;
 use tracing::info;
 
@@ -23,15 +24,16 @@ use crate::error::{AppError, RoomErrorKind};
 use crate::models::Language;
 
 /// Request body for room creation.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, utoipa::ToSchema)]
 pub struct CreateRoomRequest {
     pub name: Option<String>,
     pub description: Option<String>,
+    #[schema(example = "plain_text", nullable)]
     pub language: Option<String>,
 }
 
 /// Response body for room creation.
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, utoipa::ToSchema)]
 pub struct CreateRoomResponse {
     pub room_id: i64,
     pub room_code: String,

@@ -37,17 +37,17 @@ export interface UseYjsResult {
  * @param sendMessage - Optional callback to send sync updates to the server.
  * @returns Result containing the Yjs types and helper methods.
  */
-export function useYjs(roomId: string, sendMessage?: (msg: string) => void): UseYjsResult {
+export function useYjs(roomId: string, sendMessage?: (msg: string | Uint8Array) => void): UseYjsResult {
   // Create Y.Doc once per hook lifetime
-  const ydocRef = useRef<Y.Doc>(new Y.Doc());
+  const ydocRef = useRef<Y.Doc | null>(new Y.Doc());
   const ytextRef = useRef<Y.Text | null>(null);
   const awarenessRef = useRef<Y.Map<unknown> | null>(null);
 
   // Create Yjs types once
-  if (!ytextRef.current) {
+  if (!ytextRef.current && ydocRef.current) {
     ytextRef.current = ydocRef.current.getText('content');
   }
-  if (!awarenessRef.current) {
+  if (!awarenessRef.current && ydocRef.current) {
     awarenessRef.current = ydocRef.current.getMap('awareness');
   }
 
@@ -57,7 +57,8 @@ export function useYjs(roomId: string, sendMessage?: (msg: string) => void): Use
 
   useEffect(() => {
     const doc = ydocRef.current;
-    const ytext = ytextRef.current!;
+    const ytext = ytextRef.current;
+    if (!doc || !ytext) return;
 
     // Set up update listener: send local changes to the server
     const updateHandler = (update: Uint8Array) => {
@@ -88,12 +89,10 @@ export function useYjs(roomId: string, sendMessage?: (msg: string) => void): Use
       updateHandlerRef.current = null;
       applyUpdateRef.current = null;
 
-      // Destroy the Y.Doc
+      // Destroy the Y.Doc (keep refs to avoid recreation issues)
       doc.destroy();
-      ydocRef.current = null;
-      ytextRef.current = null;
-      awarenessRef.current = null;
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roomId, sendMessage]);
 
   // Return memoized result
@@ -101,9 +100,9 @@ export function useYjs(roomId: string, sendMessage?: (msg: string) => void): Use
     () => ({
       ytext: ytextRef.current!,
       awareness: awarenessRef.current!,
-      doc: ydocRef.current,
+      doc: ydocRef.current!,
       applyUpdate: applyUpdateRef.current!,
-    }),
+    }) as UseYjsResult,
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [ytextRef.current, awarenessRef.current, ydocRef.current, applyUpdateRef.current],
   );

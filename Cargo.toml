@@ -51,3 +51,7 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
 # Futures utilities
 futures = "0.3"
+
+# API documentation (OpenAPI / Swagger)
+utoipa = { version = "5", features = ["axum_extras", "chrono", "preserve_path_order"] }
+utoipa-swagger-ui = { version = "8", features = ["axum"] }
