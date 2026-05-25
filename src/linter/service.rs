@@ -28,7 +28,6 @@ use std::sync::atomic::{AtomicU32, Ordering};
 use dashmap::DashMap;
 use tracing::{debug, error, info, warn};
 
-use super::protocol;
 use super::protocol::LspDiagnostic;
 use super::server::{Language, LspConfig, LspProcess};
 
