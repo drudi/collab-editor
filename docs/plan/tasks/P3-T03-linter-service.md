@@ -1,6 +1,6 @@
 # P3-T03 — Linter Service
 
-**Status:** TODO
+**Status:** Done
 
 ## Goal
 

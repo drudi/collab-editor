@@ -56,10 +56,10 @@
 
 | ID | Task | Summary | Time | Depends On | Status |
 |----|------|---------|------|------------|--------|
-| P3-T01 | LSP server process | `linter/server.rs`: `LspProcess` struct spawning external `rust-analyzer`, `pyright`, or `eslint` via `tokio::process::Command`. Write stdin/stdout streams to `mpsc::channel`. | 1.5h | P1-T02 | ⬜ Todo |
-| P3-T02 | LSP protocol messages | `linter/protocol.rs`: LSP JSON-RPC envelope type. `initialize()` → `capabilities` response. `textDocument/didOpen(content, language)`, `textDocument/didChange(content, language)` on document changes. | 1.5h | P3-T01 | ⬜ Todo |
-| P3-T03 | Linter integration with rooms | `linter/service.rs`: `LintService::spawn(roomId, language)`. On room creation: start LSP process. On WS message with file content: forward to LSP via stdin, parse diagnostics from stdout JSON, broadcast back as `LintMessage`. | 1.5h | P3-T02 | ⬜ Todo |
-| P3-T04 | CodeMirror lint integration | `src/collab/lint-integration.ts`: `createLinter()` using `@codemirror/lint`. Subscribe to WS `LintMessage` events: `lintState.update(lintMessages)`. Style diagnostic lines with Tailwind colors (red for errors, yellow for warnings). | 1.5h | P3-T03 | ⬜ Todo |
+| P3-T01 | LSP server process | `linter/server.rs`: `LspProcess` struct spawning external `rust-analyzer`, `pyright`, or `eslint` via `tokio::process::Command`. Write stdin/stdout streams to `mpsc::channel`. | 1.5h | P1-T02 | ✅ Done |
+| P3-T02 | LSP protocol messages | `linter/protocol.rs`: LSP JSON-RPC envelope type. `initialize()` → `capabilities` response. `textDocument/didOpen(content, language)`, `textDocument/didChange(content, language)` on document changes. | 1.5h | P3-T01 | ✅ Done |
+| P3-T03 | Linter integration with rooms | `linter/service.rs`: `LintService::spawn(roomId, language)`. On room creation: start LSP process. On WS message with file content: forward to LSP via stdin, parse diagnostics from stdout JSON, broadcast back as `LintMessage`. | 1.5h | P3-T02 | ✅ Done |
+| P3-T04 | CodeMirror lint integration | `src/collab/lint-integration.ts`: `createLinter()` using `@codemirror/lint`. Subscribe to WS `LintMessage` events: `lintState.update(lintMessages)`. Style diagnostic lines with Tailwind colors (red for errors, yellow for warnings). | 1.5h | P3-T03 | ✅ Done |
 
 ---
 

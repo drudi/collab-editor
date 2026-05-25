@@ -51,6 +51,49 @@ pub enum WsMessage {
 
     /// Health check pong.
     Pong,
+
+    /// Linting diagnostics from LSP server.
+    /// Contains parsed diagnostics to display in the editor.
+    #[serde(rename = "lint")]
+    Lint {
+        #[serde(rename = "diagnostics")]
+        diagnostics: Vec<LspDiagnostic>,
+    },
+}
+
+/// LSP diagnostic severity level.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum LspDiagnosticSeverity {
+    /// Error: critical issues that prevent compilation/run.
+    Error,
+    /// Warning: non-critical issues.
+    Warning,
+    /// Information: informational messages.
+    Info,
+    /// Hint: suggestions for improvement.
+    Hint,
+}
+
+/// A single diagnostic from an LSP server.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct LspDiagnostic {
+    /// Line number (0-indexed).
+    pub line: i32,
+    /// Column number (0-indexed).
+    pub column: i32,
+    /// End line number (0-indexed).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "end_line")]
+    pub end_line: Option<i32>,
+    /// End column number (0-indexed).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "end_column")]
+    pub end_column: Option<i32>,
+    /// Diagnostic severity.
+    pub severity: LspDiagnosticSeverity,
+    /// Diagnostic message text.
+    pub message: String,
 }
 
 /// Cursor position in the document.

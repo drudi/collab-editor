@@ -1,6 +1,6 @@
 # P3-T02 — LSP Protocol Messages
 
-**Status:** TODO
+**Status:** Done
 
 ## Goal
 

@@ -41,12 +41,28 @@ export interface PongMessage {
   type: 'Pong';
 }
 
+/** LSP diagnostic received from the server. */
+export interface LintDiagnostic {
+  line: number;
+  column: number;
+  end_line?: number;
+  end_column?: number;
+  severity: number;
+  message: string;
+}
+
+export interface LintMessage {
+  type: 'lint';
+  diagnostics: LintDiagnostic[];
+}
+
 export type WsMessage =
   | SyncMessage
   | AwarenessMessage
   | CursorMessage
   | PingMessage
-  | PongMessage;
+  | PongMessage
+  | LintMessage;
 
 // ─── Hook Options ───────────────────────────────────────────────────────────
 
@@ -55,6 +71,8 @@ export interface UseWebSocketOptions {
   onSyncUpdate?: (update: Uint8Array) => void;
   /** Callback invoked when an awareness update is received. */
   onAwarenessUpdate?: (data: unknown) => void;
+  /** Callback invoked when a lint message is received. */
+  onLintMessage?: (diagnostics: LintDiagnostic[]) => void;
   /** Base URL for the WebSocket server. Defaults to `ws://localhost:3000`. */
   baseUrl?: string;
   /** Maximum reconnect delay in ms. Defaults to 30000. */
@@ -109,6 +127,7 @@ export function useWebSocket(
   const {
     onSyncUpdate,
     onAwarenessUpdate,
+    onLintMessage,
     baseUrl = 'ws://localhost:3000',
     maxDelay = 30000,
     initialDelay = 1000,
@@ -131,6 +150,12 @@ export function useWebSocket(
   useEffect(() => {
     onAwarenessUpdateRef.current = onAwarenessUpdate;
   }, [onAwarenessUpdate]);
+
+  // Keep lint message callback current
+  const onLintMessageRef = useRef(onLintMessage);
+  useEffect(() => {
+    onLintMessageRef.current = onLintMessage;
+  }, [onLintMessage]);
 
   // Clean up on unmount
   useEffect(() => {
@@ -238,6 +263,18 @@ export function useWebSocket(
       // Handle pong (ignore, server tracks health)
       if (parsed.type === 'Pong') {
         // Health check confirmed
+      }
+
+      // Handle lint diagnostics from server
+      if (parsed.type === 'lint' && 'diagnostics' in parsed) {
+        const lintMsg = parsed as LintMessage;
+        if (onLintMessageRef.current) {
+          try {
+            onLintMessageRef.current(lintMsg.diagnostics);
+          } catch (err) {
+            console.error('[WS] Error processing lint message:', err);
+          }
+        }
       }
 
       // Handle ping from server — reply with pong

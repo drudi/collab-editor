@@ -1,6 +1,6 @@
 # P3-T04 — CodeMirror Lint Integration
 
-**Status:** TODO
+**Status:** Done
 
 ## Goal
 

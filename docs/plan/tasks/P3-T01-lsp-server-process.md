@@ -1,6 +1,6 @@
 # P3-T01 — LSP Server Process
 
-**Status:** TODO
+**Status:** Done
 
 ## Goal
 
